@@ -1,0 +1,2791 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HFLabs — Sort & Filter Table</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #ffffff;
+  --surf:       #ffffff;
+  --surf2:      #f8f8f8;
+  --surf3:      #f5fafb;
+  --border:     #e5e5e6;
+  --border2:    #e9e9eb;
+  --accent:     #0e7d8f;
+  --accent-bg:  #f5fafb;
+  --accent-h:   #0a6b7a;
+  --accent-border: #cae2e6;
+  --purple:     #5b4cf0;
+  --purple-h:   #4a3cd9;
+  --text:       #08080a;
+  --text-m:     #36393e;
+  --text-f:     #8f9092;
+  --green:      #16a34a;
+  --amber:      #d97706;
+  --red:        #d93649;
+  --r:          6px;
+  --chip-h:     28px;
+  --rs:         4px;
+  --shadow:     0 4px 20px rgba(0,0,0,.10);
+  --nav-bg:     #1b1e24;
+  --nav-text:   #ffffff;
+  --nav-muted:  #ececec;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 13px; line-height: 1.5; overflow: hidden; -webkit-font-smoothing: antialiased; }
+
+/* ── Page Header ─────────────────────────────── */
+.page-header {
+  display: flex; align-items: center; gap: 16px;
+  height: 48px; padding: 0 40px;
+  background: var(--nav-bg);
+  flex-shrink: 0;
+}
+.page-header-powered {
+  margin-left: auto;
+  font-size: 11px; font-weight: 400;
+  color: var(--nav-muted); opacity: .5;
+  white-space: nowrap;
+}
+.page-logo {
+  height: 18px; width: auto;
+  filter: brightness(0) invert(1);
+  opacity: .92;
+}
+.page-header-title {
+  font-size: 12px; font-weight: 500;
+  color: var(--nav-muted); opacity: .6;
+  border-left: 1px solid rgba(255,255,255,.15);
+  padding-left: 16px; margin-left: 4px;
+  letter-spacing: .01em;
+}
+
+/* ── Layout ─────────────────────────────────── */
+.layout { display: flex; height: calc(100vh - 48px); overflow: hidden; position: relative; }
+
+/* State sidebar */
+.state-bar {
+  width: 192px; flex-shrink: 0;
+  background: var(--surf);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 14px 10px; gap: 6px;
+  overflow-y: auto;
+  transition: width .2s ease, padding .2s ease, opacity .2s ease;
+}
+
+.state-bar-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-f); padding: 0 6px 6px;
+}
+.state-btn {
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--text-m); padding: 9px 10px; border-radius: var(--rs);
+  cursor: pointer; font-family: inherit; font-size: 12px; text-align: left;
+  transition: all .15s; line-height: 1.35;
+}
+.state-btn:hover { background: var(--surf2); color: var(--text); border-color: #333; }
+.state-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.state-btn strong { display: block; font-weight: 600; }
+.state-btn span { font-size: 11px; opacity: .65; }
+.state-bar-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* Main */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+/* ── Topbar ─────────────────────────────────── */
+.topbar {
+  background: var(--surf);
+  padding: 10px 40px 8px; display: flex; flex-direction: column; gap: 8px;
+  position: relative; z-index: 20;
+}
+.topbar-row { display: flex; align-items: baseline; gap: 8px; }
+.topbar-left { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1; }
+.toolbar-zone { background: var(--surf); padding-top: 40px; }
+.topbar-title { font-size: 14px; font-weight: 600; color: var(--text); margin-right: 4px; }
+.spacer { flex: 1; }
+
+/* ── Buttons ─────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: var(--chip-h); padding: 0 12px; border-radius: var(--r);
+  border: 1px solid var(--accent-border); background: var(--accent-bg);
+  color: var(--accent); font-family: inherit; font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; line-height: 1;
+  box-sizing: border-box;
+}
+.btn:hover { background: var(--surf3); color: var(--accent); border-color: var(--accent); }
+.btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); border-color: var(--accent-h); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-m); }
+.btn-ghost:hover { background: var(--surf2); color: var(--text); border-color: var(--border2); }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px;
+}
+
+/* ── Sort Panel ──────────────────────────────── */
+.sort-panel {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 420px; background: var(--surf);
+  border: 1px solid var(--border2); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  padding: 14px 16px 10px; z-index: 100; display: none; overflow: visible;
+}
+.sort-panel.open { display: block; animation: fadeIn .12s ease; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.sort-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sort-panel-title { font-size: 13px; font-weight: 600; color: var(--text-m); }
+.sort-clear-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-f);
+  display: flex; align-items: center; padding: 2px; border-radius: 4px; transition: color .1s;
+}
+.sort-clear-btn:hover { color: var(--red); }
+.sort-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.sort-drag { color: var(--text-f); cursor: grab; flex-shrink: 0; }
+.sort-select {
+  border: 1.5px solid var(--border2); border-radius: 8px;
+  padding: 6px 28px 6px 12px; font-family: inherit; font-size: 13px;
+  color: var(--text); background: var(--surf); cursor: pointer;
+  appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.sort-select:hover { border-color: var(--border2); background-color: var(--surf2); }
+.sort-select option { color: #000; }
+.sort-select:first-of-type { min-width: 130px; }
+.sort-select:last-of-type { min-width: 160px; }
+.sort-row-del {
+  background: none; border: none; cursor: pointer; color: var(--text-f);
+  display: flex; align-items: center; padding: 4px; border-radius: 4px; transition: color .1s; flex-shrink: 0;
+}
+.sort-row-del:hover { color: var(--red); }
+.sort-add-btn {
+  display: flex; align-items: center; gap: 6px; margin-top: 4px;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 13px; color: var(--accent); padding: 6px 0; transition: opacity .1s;
+}
+.sort-add-btn:hover { opacity: .75; }
+.sort-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--surf2); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 4px 6px 4px 9px;
+}
+.sort-chip-idx {
+  font-size: 10px; font-weight: 700; color: var(--text-f);
+  background: var(--surf3); border-radius: 3px; padding: 1px 5px; margin-right: 2px;
+}
+.chip-select {
+  background: transparent; border: none; color: var(--text);
+  font-family: inherit; font-size: 12px; cursor: pointer; outline: none; padding: 0 2px;
+}
+.chip-select option { background: #1f1f1f; color: var(--text); }
+.chip-sep { color: var(--text-f); font-size: 12px; padding: 0 1px; }
+.sort-chip-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; border: none;
+  background: transparent; color: var(--text-f); cursor: pointer;
+  font-size: 13px; line-height: 1; transition: all .1s; padding: 0; margin-left: 2px;
+}
+.sort-chip-del:hover { background: rgba(255,255,255,.09); color: var(--text); }
+.add-link {
+  background: none; border: none; color: var(--accent); font-family: inherit;
+  font-size: 12px; cursor: pointer; padding: 6px 0; display: inline-flex;
+  align-items: center; gap: 4px; white-space: nowrap;
+}
+.add-link:hover { text-decoration: underline; }
+.sort-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+/* ── Filter Bar ──────────────────────────────── */
+.filter-bar { display: none; }
+
+.inline-filter-chips {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.inline-filter-group {
+  display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  background: var(--surf); border: 1px solid var(--accent-border);
+  border-radius: var(--r); padding: 5px 10px;
+  min-height: var(--chip-h); box-sizing: border-box;
+}
+.inline-filter-group-clickable {
+  cursor: pointer; transition: background .15s, border-color .15s;
+}
+.inline-filter-group-clickable:hover { background: var(--accent-bg); border-color: var(--accent); }
+.inline-filter-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--accent); font-weight: 500; white-space: nowrap;
+}
+.inline-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; color: var(--text); line-height: 1;
+  background: #f0f0f2; border-radius: 4px; padding: 3px 6px;
+  white-space: nowrap;
+}
+.inline-chip-more {
+  display: inline-flex; align-items: center;
+  font-size: 12px; color: var(--accent); font-weight: 500;
+  white-space: nowrap; padding: 0 2px;
+}
+.inline-chip-del {
+  background: none; border: none; cursor: pointer; color: var(--text-f);
+  font-size: 13px; line-height: 1; padding: 0; transition: color .1s;
+}
+.inline-chip-del:hover { color: var(--red); }
+.inline-chip-add {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--accent-border); border-radius: 4px;
+  padding: 2px 7px; font-size: 12px; color: var(--accent); line-height: 1;
+  background: var(--surf); cursor: pointer; transition: all .1s; white-space: nowrap;
+}
+.inline-chip-add:hover { border-color: var(--accent); background: var(--accent-bg); }
+.inline-group-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; border: none;
+  background: transparent; color: var(--text-f); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 0; transition: all .1s; flex-shrink: 0;
+}
+.inline-group-del:hover { background: rgba(217,54,73,.1); color: var(--red); }
+.reset-all-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: var(--chip-h); padding: 0 10px; box-sizing: border-box;
+  background: #f4f4f5; border: none; border-radius: 6px;
+  font-size: 12px; color: var(--text-m); line-height: 1;
+  font-family: inherit; cursor: pointer; transition: all .1s; white-space: nowrap;
+}
+.reset-all-chip:hover { color: var(--red); background: #fce8e8; }
+
+/* одна группа = одно поле */
+.filter-group {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px;
+  font-size: 12px; line-height: 1.6;
+}
+.fg-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--text-m); font-weight: 500; white-space: nowrap; flex-shrink: 0;
+}
+.fg-label svg { color: var(--text-f); }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 7px; font-size: 12px; color: var(--text);
+}
+.fc-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px; border: none; background: transparent;
+  color: var(--text-f); cursor: pointer; font-size: 13px; line-height: 1;
+  padding: 0; transition: color .1s;
+}
+.fc-del:hover { color: var(--red); }
+.fc-add {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: transparent; border: 1px dashed var(--border2);
+  border-radius: 4px; padding: 2px 7px; font-size: 12px;
+  color: var(--accent); cursor: pointer; transition: all .1s;
+}
+.fc-add:hover { border-color: var(--accent); background: var(--accent-bg); }
+.filter-bar-footer {
+  display: flex; align-items: center; padding-top: 2px;
+}
+.reset-all-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text-m); font-family: inherit; font-size: 12px;
+  cursor: pointer; padding: 2px 8px; transition: all .1s;
+}
+.reset-all-link:hover { color: var(--red); border-color: var(--red); }
+
+/* ── Dropdown ────────────────────────────────── */
+.dropdown {
+  position: fixed; z-index: 200;
+  background: var(--surf); border: 1px solid var(--border2);
+  border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  min-width: 180px; overflow: hidden; display: none;
+}
+.dropdown.open { display: block; animation: fadeIn .12s ease; }
+.filter-add-drop {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 200px; background: var(--surf);
+  border: 1px solid var(--border2); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 100; display: none; overflow: hidden;
+}
+.filter-add-drop.open { display: block; animation: fadeIn .12s ease; }
+
+.dd-head { padding: 9px 12px 7px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-f); border-bottom: 1px solid var(--border); }
+.dd-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 12px; color: var(--text); transition: background .1s; }
+.dd-item:hover { background: var(--surf2); }
+.dd-item.active { background: var(--accent-bg); color: var(--accent); }
+.dd-sep { height: 1px; background: var(--border); margin: 3px 0; }
+.dd-check { display: flex; align-items: center; gap: 8px; padding: 7px 12px; cursor: pointer; font-size: 12px; color: var(--text); transition: background .1s; }
+.dd-check:hover { background: var(--surf2); }
+.dd-check input[type=checkbox] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+.dd-foot { padding: 8px 12px; border-top: 1px solid var(--border); display: flex; gap: 6px; }
+.dd-apply { flex: 1; padding: 5px 8px; background: var(--accent); color: #fff; border: none; border-radius: var(--rs); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .1s; }
+.dd-apply:hover { background: var(--accent-h); }
+.dd-cancel { padding: 5px 10px; background: transparent; color: var(--text-m); border: 1px solid var(--border2); border-radius: var(--rs); font-family: inherit; font-size: 12px; cursor: pointer; transition: all .1s; }
+.dd-cancel:hover { background: var(--surf2); color: var(--text); }
+
+/* ── Table ───────────────────────────────────── */
+.table-wrap { flex: 1; overflow: auto; padding: 0 40px 16px; min-height: 0; }
+.table-wrap table { width: 100%; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; border-collapse: separate; border-spacing: 0; }
+table { width: 100%; border-collapse: collapse; }
+thead { position: sticky; top: 0; z-index: 10; background: #f8f8f8; }
+
+th {
+  text-align: left;
+  white-space: nowrap; position: relative; user-select: none;
+  font-weight: 500; color: var(--text-m);
+}
+th.col-hidden, td.col-hidden { display: none; }
+
+.th-inner { display: flex; align-items: center; gap: 3px; padding: 9px 12px; }
+.th-sort {
+  flex: 1; cursor: pointer; display: flex; align-items: center; gap: 5px;
+  font-size: 12px; transition: color .15s; padding: 2px 0;
+}
+.th-sort:hover { color: var(--text); }
+.th-sort:hover .sort-hint { opacity: 1; }
+th.th-sorted .th-sort { color: var(--accent); }
+.sort-arrow { font-size: 11px; opacity: .5; transition: all .15s; line-height: 1; }
+th.th-sorted .sort-arrow { opacity: 1; color: var(--accent); }
+.sort-hint {
+  opacity: 0; transition: opacity .15s; color: var(--text-f);
+  display: inline-flex; align-items: center; margin-left: 2px; flex-shrink: 0;
+}
+
+.th-filter-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: var(--rs); border: none;
+  background: transparent; color: var(--text-f); cursor: pointer;
+  font-size: 10px; padding: 0; transition: all .15s; flex-shrink: 0;
+  margin: -4px -2px;
+}
+.th-filter-btn:hover { background: var(--surf2); color: var(--text); }
+.th-filter-btn.has-filter { color: var(--accent); }
+
+/* Column resize indicator */
+th::after {
+  content: ''; position: absolute; right: 0; top: 20%; bottom: 20%;
+  width: 1px; background: var(--border); opacity: .5;
+}
+th:last-child::after { display: none; }
+
+td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  font-size: 13px; color: var(--text); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 0;
+}
+tr:hover td { background: var(--surf2); }
+tr:last-child td { border-bottom: none; }
+tbody tr.row-hidden { display: none; }
+
+/* ── Search bar ────────────────────────────────── */
+.search-wrap {
+  padding: 10px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+.search-field { max-width: 320px; }
+.search-input-wrap {
+  display: flex; align-items: center;
+  border: 1px solid var(--border2); border-radius: var(--r);
+  background: var(--surf); transition: border-color .15s; height: 32px;
+}
+.search-input-wrap:focus-within { border-color: var(--accent); }
+.search-input {
+  flex: 1; border: none; background: transparent; font-family: inherit;
+  font-size: 13px; color: var(--text); outline: none; padding: 0 8px; min-width: 0;
+}
+.search-input::placeholder { color: var(--text-f); }
+.search-right {
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.search-icon-right {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; color: var(--text-f);
+}
+.search-sep {
+  width: 1px; height: 16px; background: var(--border); flex-shrink: 0;
+}
+.search-clear {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 4px;
+  background: none; border: none; cursor: pointer; color: var(--text-f);
+  font-size: 14px; line-height: 1; transition: all .1s; flex-shrink: 0;
+}
+.search-clear:hover { background: rgba(0,0,0,.07); color: var(--text); }
+
+/* ── Closed filter pills ───────────────────────── */
+.cf-pill-wrap { display: inline-block; }
+.cf-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: var(--chip-h); padding: 0 10px; box-sizing: border-box; border-radius: var(--r);
+  border: 1px solid var(--accent-border); background: var(--surf);
+  color: var(--accent); font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; transition: all .15s; line-height: 1;
+}
+.cf-pill:hover { border-color: var(--accent); background: var(--accent-bg); }
+.cf-pill-open { border-color: var(--accent); background: var(--accent-bg); }
+.cf-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+  background: var(--surf); border: 1px solid var(--border2); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12); min-width: 160px; overflow: hidden;
+  animation: fadeIn .12s ease;
+}
+.cf-dd-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 12px; font-size: 13px; color: var(--text); gap: 8px;
+}
+.cf-dd-item:hover { background: var(--surf2); }
+.cf-dd-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 5px;
+  background: none; border: none; cursor: pointer; color: var(--text-f);
+  font-size: 14px; line-height: 1; padding: 0; transition: all .1s; flex-shrink: 0;
+}
+.cf-dd-del:hover { color: var(--red); background: rgba(0,0,0,.06); }
+.cf-dd-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px; border-top: 1px solid var(--border); gap: 8px;
+}
+.cf-dd-add {
+  background: none; border: none; cursor: pointer; color: var(--accent);
+  font-family: inherit; font-size: 12px; padding: 2px 0; transition: opacity .1s;
+}
+.cf-dd-add:hover { opacity: .75; }
+.cf-dd-clear {
+  background: none; border: none; cursor: pointer; color: var(--text-f);
+  font-family: inherit; font-size: 12px; padding: 2px 0; transition: color .1s;
+}
+.cf-dd-clear:hover { color: var(--red); }
+
+/* ── Pagination bar ────────────────────────────── */
+
+.pagination-right { display: flex; align-items: center; gap: 12px; }
+.page-size-wrap {
+  display: flex; align-items: center; gap: 6px; color: var(--text-m);
+}
+.page-size-select {
+  border: 1px solid var(--border2); border-radius: 6px;
+  padding: 3px 22px 3px 8px; font-family: inherit; font-size: 13px;
+  color: var(--text); background: var(--surf); cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 6px center;
+}
+.page-nav { display: flex; align-items: center; gap: 4px; }
+.page-nav-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid var(--border2); background: var(--surf);
+  cursor: pointer; color: var(--text-m); transition: all .1s;
+}
+.page-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.page-nav-btn:disabled { opacity: .35; cursor: default; }
+
+/* ── Error cells ───────────────────────────────── */
+.th-error-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #e53935; color: #fff; font-size: 10px; font-weight: 700;
+  margin-left: 5px; flex-shrink: 0; line-height: 1;
+}
+td.cell-error {
+  background: #fff5f5 !important; color: #c62828 !important; font-weight: 500;
+}
+tr:hover td.cell-error { background: #ffe8e8 !important; }
+
+/* ── Bulk action bar ───────────────────────────── */
+.bulk-bar {
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px;
+  background: var(--surf); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 6px 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  white-space: nowrap; z-index: 50;
+  animation: bulkIn .18s ease;
+}
+@keyframes bulkIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.bulk-count {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  padding: 0 10px 0 6px; border-right: 1px solid var(--border);
+  margin-right: 4px;
+}
+.bulk-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 12px; border-radius: 8px;
+  border: none; background: transparent;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--accent); cursor: pointer; transition: background .12s;
+}
+.bulk-btn:hover { background: var(--accent-bg); }
+.bulk-btn.bulk-danger { color: var(--red, #e53935); }
+.bulk-btn.bulk-danger:hover { background: #fce8e8; }
+.bulk-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+
+/* ── Row selection ──────────────────────────────── */
+.th-sel { width: 1%; white-space: nowrap; text-align: center; }
+.th-sel .th-inner { justify-content: center; padding: 9px 8px; min-width: 0; }
+.td-sel { width: 1%; white-space: nowrap; text-align: center; cursor: pointer; padding: 0 8px !important; }
+.td-sel-inner { display: flex; align-items: center; justify-content: center; height: 41px; }
+.row-num { font-size: 11px; color: var(--text-f); user-select: none; }
+.row-cb { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; display: none; pointer-events: none; }
+tr:hover .td-sel .row-num { display: none; }
+tr:hover .td-sel .row-cb { display: block; }
+tr.row-selected .td-sel .row-num { display: none; }
+tr.row-selected .td-sel .row-cb { display: block; }
+tr.row-selected td { background: var(--accent-bg) !important; }
+tr.row-selected:hover td { background: color-mix(in srgb, var(--accent) 15%, transparent) !important; }
+
+/* Status badge */
+.badge-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500;
+}
+.badge-status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.s-active   { background: rgba(34,197,94,.12);  color: var(--green); }
+.s-active::before { background: var(--green); }
+.s-vacation { background: rgba(245,158,11,.12); color: var(--amber); }
+.s-vacation::before { background: var(--amber); }
+.s-blocked  { background: rgba(239,68,68,.12);  color: var(--red); }
+.s-blocked::before { background: var(--red); }
+
+/* Empty row */
+.empty-row td { text-align: center; padding: 40px; color: var(--text-f); }
+.empty-row:hover td { background: inherit !important; }
+
+/* ── Settings Panel ──────────────────────────── */
+/* Settings dropdown */
+.settings-panel {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  width: 240px; background: var(--surf);
+  border: 1px solid var(--border2); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 100; display: none; overflow: hidden;
+}
+.settings-panel.open { display: block; animation: fadeIn .12s ease; }
+
+/* ── Expandable rows ────────────────────────────── */
+.row-chevron {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; flex-shrink: 0;
+  color: var(--text-f); transition: transform .18s ease, color .1s;
+  cursor: pointer;
+}
+tr.row-expanded .row-chevron { transform: rotate(90deg); color: var(--accent); }
+tr.row-expandable:hover .row-chevron { color: var(--text-m); }
+.td-fio-inner { display: flex; align-items: center; gap: 6px; }
+
+tr.row-detail-row td {
+  background: var(--surf2);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.row-detail-inner {
+  padding: 12px 16px 14px 42px;
+  display: flex; flex-direction: column; gap: 8px;
+  font-size: 12px; color: var(--text-m);
+}
+.row-detail-error {
+  color: var(--red); font-weight: 500; font-size: 12px;
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 4px;
+}
+.row-detail-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.row-detail-chip {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surf); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text);
+}
+.row-detail-chip .chip-ok { color: #16a34a; }
+.row-detail-chip .chip-err { color: var(--red); }
+.row-detail-label { color: var(--text-f); font-size: 11px; margin-right: 2px; }
+
+/* ── Row 3-dot menu ─────────────────────────────── */
+.row-menu-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 4px; border: none;
+  background: transparent; cursor: pointer; color: #bbb;
+  flex-shrink: 0; transition: background .1s, color .1s;
+  padding: 0;
+}
+.row-menu-btn:hover { background: var(--surf2); color: var(--text); }
+.row-menu-btn.active { background: var(--surf2); color: var(--accent); }
+
+/* Menu column — точная копия чекбоксов */
+.th-menu { width: 1%; white-space: nowrap; text-align: center; }
+.td-menu { width: 1%; white-space: nowrap; text-align: center; padding: 0 16px !important; min-width: 40px; }
+.td-menu-inner { display: flex; align-items: center; justify-content: center; height: 41px; }
+.td-delete { width: 1%; white-space: nowrap; text-align: center; padding: 0 12px !important; min-width: 40px; }
+.row-delete-btn { background: none; border: none; cursor: pointer; color: var(--text-f); display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 6px; transition: color .15s, background .15s; }
+.row-delete-btn:hover { color: #e53935; background: rgba(229,57,53,.08); }
+
+.row-ctx-menu {
+  position: fixed; z-index: 500;
+  min-width: 190px; background: var(--surf);
+  border: 1px solid var(--border2); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.13);
+  padding: 4px; overflow: hidden;
+  animation: fadeIn .1s ease;
+}
+.row-ctx-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; border-radius: 6px;
+  font-size: 13px; color: var(--text); cursor: pointer;
+  transition: background .1s;
+}
+.row-ctx-item:hover { background: var(--surf2); }
+.row-ctx-item.danger { color: var(--red); }
+.row-ctx-item.danger:hover { background: rgba(217,54,73,.07); }
+.row-ctx-sep { height: 1px; background: var(--border); margin: 3px 0; }
+.row-ctx-item svg { flex-shrink: 0; color: var(--text-m); }
+.row-ctx-item.danger svg { color: var(--red); }
+
+/* ── Filter Sidebar ─────────────────────────────── */
+.filter-sidebar-overlay { display: none; }
+
+.filter-sidebar {
+  width: 0; flex-shrink: 0; overflow: hidden;
+  background: var(--surf);
+  border-left: 1px solid var(--border2);
+  display: flex; flex-direction: column;
+  transition: width .22s cubic-bezier(.4,0,.2,1);
+}
+.filter-sidebar.open { width: 280px; }
+.filter-sidebar-inner { width: 280px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+.filter-sidebar-header {
+  display: flex; align-items: center; padding: 14px 16px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.filter-sidebar-title {
+  flex: 1; font-size: 14px; font-weight: 600; color: var(--text);
+}
+.filter-sidebar-close {
+  background: none; border: none; cursor: pointer; color: var(--text-m);
+  display: flex; align-items: center; padding: 4px; border-radius: 6px;
+  transition: color .1s, background .1s;
+}
+.filter-sidebar-close:hover { color: var(--text); background: var(--surf2); }
+
+.filter-sidebar-meta {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 4px;
+}
+.fsb-meta-group { padding: 10px 16px 4px; }
+.fsb-meta-group-title {
+  font-size: 10px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-f);
+  margin-bottom: 6px;
+}
+.fsb-meta-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 8px; border-radius: 6px;
+  font-size: 12px; color: var(--text); cursor: pointer;
+  transition: background .1s; user-select: none;
+}
+.fsb-meta-item:hover { background: var(--surf2); }
+.fsb-meta-item input[type=checkbox] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0; }
+.fsb-meta-item.active { color: var(--accent); }
+.fsb-meta-dot {
+  width: 4px; height: 18px; border-radius: 2px; flex-shrink: 0;
+}
+/* Секции-тогглы (документы и т.д.) */
+.fsb-meta-section {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text); cursor: pointer;
+  user-select: none; transition: background .1s;
+}
+.fsb-meta-section:hover { background: var(--surf2); }
+.fsb-meta-section-chevron {
+  color: var(--text-f); flex-shrink: 0; display: flex; align-items: center;
+  transition: transform .15s;
+}
+.fsb-meta-section.expanded .fsb-meta-section-chevron { transform: rotate(90deg); }
+.fsb-meta-section-label { flex: 1; }
+.fsb-meta-section-toggle {
+  display: flex; align-items: center;
+}
+/* мини-тоггл */
+.sp-mini-toggle { position: relative; display: inline-flex; align-items: center; }
+.sp-mini-toggle input { display: none; }
+.sp-mini-track {
+  width: 30px; height: 16px; border-radius: 8px; background: var(--border);
+  position: relative; transition: background .2s; display: block; cursor: pointer;
+}
+.sp-mini-track::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 12px; height: 12px; border-radius: 50%; background: #fff;
+  transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.sp-mini-toggle input:checked + .sp-mini-track { background: var(--accent); }
+.sp-mini-toggle input:checked + .sp-mini-track::after { transform: translateX(14px); }
+.fsb-meta-section-body {
+  display: none; padding: 6px 16px 10px 38px; background: var(--surf2);
+}
+.fsb-meta-section.expanded + .fsb-meta-section-body { display: block; }
+.fsb-meta-section-body .fsb-meta-item { font-size: 12px; }
+
+.filter-sidebar-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+/* Sidebar field rows */
+.fsb-field {
+  border-bottom: 1px solid var(--border);
+}
+.fsb-field-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer;
+  transition: background .1s;
+}
+.fsb-field-header:hover { background: var(--surf2); }
+.fsb-field-chevron {
+  color: var(--text-f); flex-shrink: 0; transition: transform .15s;
+  display: flex; align-items: center;
+}
+.fsb-field.expanded .fsb-field-chevron { transform: rotate(90deg); }
+.fsb-field-name { flex: 1; font-size: 13px; color: var(--text); }
+.fsb-field-clear {
+  flex-shrink: 0; font-size: 15px;
+  opacity: 0; pointer-events: none;
+  transition: color .1s, opacity .1s;
+}
+.fsb-field.active .fsb-field-clear { opacity: 1; pointer-events: auto; }
+.fsb-field-count {
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  background: var(--accent-bg); border-radius: 10px;
+  padding: 1px 7px; flex-shrink: 0;
+}
+.fsb-field-pause {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border: none; background: none; cursor: pointer;
+  color: var(--text-f); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s, color .1s, background .1s;
+}
+.fsb-field.active .fsb-field-pause { opacity: 1; pointer-events: auto; }
+.fsb-field-pause:hover { background: var(--surf2); color: var(--text-m); }
+.fsb-field.paused .fsb-field-pause { color: var(--amber); opacity: 1; pointer-events: auto; }
+.fsb-field.paused .fsb-field-count { opacity: 0.4; }
+.fsb-field.paused .fsb-field-name { color: var(--text-f); }
+
+.fsb-field-values {
+  display: none; padding: 0 16px 12px 38px;
+}
+.fsb-field.expanded .fsb-field-values { display: block; }
+
+.fsb-values-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.fsb-val-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: 6px;
+  font-size: 12px; color: var(--text); cursor: pointer;
+  transition: background .1s;
+}
+.fsb-val-item:hover { background: var(--surf2); }
+.fsb-val-item input[type=checkbox] {
+  accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0;
+}
+.fsb-apply-row {
+  padding: 10px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
+  display: flex; gap: 8px;
+}
+.fsb-apply-row .dd-apply { flex: 1; }
+.fsb-apply-row .dd-cancel { }
+
+/* ── Column visibility submenu ─────────────────── */
+.sp-colvis-panel {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  width: 300px; background: var(--surf);
+  border: 1px solid var(--border2); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 101; display: none; overflow: hidden;
+}
+.sp-colvis-panel.open { display: block; animation: fadeIn .12s ease; }
+.sp-colvis-header {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--text);
+}
+.sp-colvis-back {
+  background: none; border: none; cursor: pointer; color: var(--text-m);
+  display: flex; align-items: center; padding: 2px; border-radius: 4px;
+  transition: color .1s;
+}
+.sp-colvis-back:hover { color: var(--accent); }
+.sp-colvis-list { max-height: 320px; overflow-y: auto; }
+.sp-colvis-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text);
+  transition: background .1s;
+}
+.sp-colvis-row:last-child { border-bottom: none; }
+.sp-colvis-row.hidden-col { opacity: 0.45; }
+.sp-colvis-drag {
+  color: var(--text-f); cursor: grab; flex-shrink: 0;
+  display: flex; align-items: center;
+}
+.sp-colvis-row.drag-over { border-top: 2px solid var(--accent); }
+.sp-colvis-row.dragging { opacity: 0.4; }
+.sp-colvis-name { flex: 1; }
+.sp-colvis-eye {
+  background: none; border: none; cursor: pointer; color: var(--text-m);
+  display: flex; align-items: center; padding: 2px 4px; border-radius: 4px;
+  transition: color .1s; flex-shrink: 0;
+}
+.sp-colvis-eye:hover { color: var(--accent); }
+.sp-colvis-eye.hidden { color: var(--text-f); }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:translateY(0) } }
+
+.sp-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+  cursor: pointer; transition: background .1s; font-size: 13px; color: var(--text);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.sp-item:last-child { border-bottom: none; }
+.sp-item:hover { background: var(--surf2); }
+.sp-item-icon { color: var(--text-m); flex-shrink: 0; width: 16px; display:flex; align-items:center; justify-content:center; }
+.sp-item-label { flex: 1; font-size: 13px; color: var(--text); }
+.sp-item-arrow { color: var(--text-f); }
+/* Toggle switch */
+.sp-toggle { position:relative; width:36px; height:20px; flex-shrink:0; }
+.sp-toggle input { opacity:0; width:0; height:0; }
+.sp-toggle-track {
+  position:absolute; inset:0; background:#ccc; border-radius:10px;
+  transition: background .2s; cursor:pointer;
+}
+.sp-toggle input:checked + .sp-toggle-track { background: var(--accent); }
+.sp-toggle-track::after {
+  content:''; position:absolute; left:2px; top:2px;
+  width:16px; height:16px; border-radius:50%; background:#fff;
+  transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.sp-toggle input:checked + .sp-toggle-track::after { transform: translateX(16px); }
+
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* SVG icons inline */
+.icon-funnel { display: inline-block; }
+.icon-sort-asc::after  { content: '↑'; }
+.icon-sort-desc::after { content: '↓'; }
+.icon-sort-none::after { content: '↕'; opacity: .3; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <img src="hflabs-logo.svg" alt="HFLabs" class="page-logo">
+  <span class="page-header-title">Прототип: Сортировка и фильтрация</span>
+  <span class="page-header-powered">Powered by Design team</span>
+</header>
+
+<div class="layout">
+
+  <!-- ① State Switcher Sidebar -->
+  <aside class="state-bar" id="stateBar"></aside>
+
+
+  <!-- ② Main Area -->
+  <div class="main" id="mainArea">
+
+    <!-- Toolbar zone: topbar + filter chips, one bottom border -->
+    <div class="toolbar-zone">
+      <header class="topbar" id="topbar"></header>
+
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <colgroup id="colgroup"></colgroup>
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+        <tfoot id="tfoot"></tfoot>
+      </table>
+    </div><!-- /table-wrap -->
+
+    <!-- Bulk action bar -->
+    <div id="bulkBar" class="bulk-bar" style="display:none">
+      <span class="bulk-count" id="bulkCount">Выбрано 0</span>
+      <button class="bulk-btn bulk-danger">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5.5 2h3M3.5 3.5l.5 8h6l.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Удалить
+      </button>
+      <div class="bulk-sep"></div>
+      <button class="bulk-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        Действие 2
+      </button>
+      <button class="bulk-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        Действие 3
+      </button>
+    </div>
+
+    <!-- Settings Slide-In -->
+
+
+  </div><!-- /main -->
+
+  <!-- Filter Sidebar — flex sibling, pushes table left -->
+  <div class="filter-sidebar" id="filterSidebar">
+    <div class="filter-sidebar-inner">
+      <div class="filter-sidebar-header">
+        <span class="filter-sidebar-title">Расширенный фильтр</span>
+        <button class="filter-sidebar-close" id="btnFilterSidebarClose">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="filter-sidebar-meta" id="filterSidebarMeta"></div>
+      <div class="filter-sidebar-body" id="filterSidebarBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Portals for floating dropdowns -->
+
+<div id="dropColFilter" class="dropdown"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────
+const ROWS = [
+  { fio:'Иванов Алексей Николаевич',   date:'12.01.2024', status:'Активен',     category:'Менеджер',    dept:'Продажи',    email:'ivanov@corp.ru',    phone:'+7 900 123-45-67', inn:'772512345678' },
+  { fio:'Петрова Мария Сергеевна',      date:'03.03.2023', status:'В отпуске',   category:'Аналитик',    dept:'Аналитика',  email:'petrova@corp.ru',   phone:'+7 901 234-56-78', inn:'781023456789' },
+  { fio:'Сидоров Дмитрий Игоревич',    date:'15.07.2022', status:'Активен',     category:'Разработчик', dept:'Разработка', email:'sidorov@corp.ru',   phone:'+7 902 345-67-89', inn:'770134567890' },
+  { fio:'Козлова Анна Владимировна',   date:'28.11.2023', status:'Заблокирован',category:'Менеджер',    dept:'HR',         email:'kozlova@corp.ru',   phone:'',                 inn:'773045678901' },
+  { fio:'Новиков Павел Андреевич',      date:'07.04.2024', status:'Активен',     category:'Дизайнер',    dept:'Дизайн',     email:'novikov@corp.ru',   phone:'+7 904 567-89-01', inn:'774056789012' },
+  { fio:'Морозова Екатерина Юрьевна',  date:'19.09.2023', status:'В отпуске',   category:'Аналитик',    dept:'Аналитика',  email:'',                  phone:'+7 905 678-90-12', inn:'775067890123' },
+  { fio:'Волков Сергей Александрович', date:'02.02.2024', status:'Активен',     category:'Разработчик', dept:'Разработка', email:'volkov@corp.ru',    phone:'+7 906 789-01-23', inn:''             },
+  { fio:'Зайцева Ольга Михайловна',    date:'14.06.2022', status:'Заблокирован',category:'Менеджер',    dept:'Продажи',    email:'zaitseva@corp.ru',  phone:'+7 907 890-12-34', inn:'777089012345' },
+];
+
+const COLS = [
+  { id:'fio',      label:'ФИО',             w:'28%' },
+  { id:'date',     label:'Дата',            w:'13%' },
+  { id:'status',   label:'Статус',          w:'14%' },
+  { id:'category', label:'Категория',       w:'18%' },
+  { id:'dept',     label:'Подразделение',   w:'18%' },
+  { id:'email',    label:'Email',           w:'20%', hiddenByDefault: true },
+  { id:'phone',    label:'Телефон',         w:'14%', hiddenByDefault: true },
+  { id:'inn',      label:'ИНН',             w:'13%', hiddenByDefault: true },
+];
+
+const COLS_DEFAULT = COLS.map(c => ({...c})); // сохраняем начальный порядок
+
+const STATUS_CLASS = { 'Активен':'s-active', 'В отпуске':'s-vacation', 'Заблокирован':'s-blocked' };
+
+// ─────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────
+const S = {
+  sorts: [],          // [{ field, dir:'asc'|'desc' }]
+  filters: [],        // [{ field, values:[] }]
+  colVis: Object.fromEntries(COLS.map(c=>[c.id, !c.hiddenByDefault])),
+  sortPanelOpen: false,
+  settingsOpen: false,
+  colVisOpen: false,
+  expandableRows: false,   // режим раскрывающихся строк
+  expandedRows: new Set(), // Set of origIdx
+  rowMenuMode: false,      // режим 3-dot меню
+  openRowMenu: null,       // origIdx открытого меню
+  filterSidebarOpen: false,
+  filterSidebarExpanded: null,   // id колонки раскрытой в сайдбаре
+  filterSidebarDrafts: {},       // { colId: Set<value> } — черновики пока не применены
+  filterSidebarPaused: {},       // { colId: bool } — приостановленные фильтры
+  filterSidebarMeta: {},         // { metaId: bool } — мета-фильтры
+  showRowNum: false,
+  showClosedFilters: false,
+  filterAddOpen: false,
+  colFilterOpen: null,       // col id or null
+  colFilterDraft: null,      // { field, sel: Set }
+  activeState: -1,
+  selectedRows: new Set(),   // Set of ROWS indices
+  closedFilterOpen: null,    // field id of open closed-filter dropdown
+  showStateBar: false,       // left state panel visibility
+  forceEmpty: false,         // override: show empty table
+  errorCells: null,          // { [rowIdx]: [colId, ...] } — highlighted error cells
+  showPagination: false,     // pagination bar
+  currentPage: 1,            // current page (1-indexed)
+  pageSize: 10,              // rows per page
+  showSearch: false,         // search bar visibility
+  searchQuery: '',           // search string
+};
+
+// ─────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const colLabel = id => COLS.find(c=>c.id===id)?.label||id;
+const uniqueVals = field => [...new Set(ROWS.map(r=>r[field]))].sort();
+
+function getSortedFiltered() {
+  if (S.forceEmpty) return [];
+  let rows = [...ROWS];
+  // apply search
+  if (S.searchQuery) {
+    const q = S.searchQuery.toLowerCase();
+    rows = rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)));
+  }
+  // apply filters
+  if (S.filters.length) {
+    rows = rows.filter(r => S.filters.every(f => !f.values.length || f.values.includes(r[f.field])));
+  }
+  // apply meta-filters
+  rows = applyMetaFilter(rows);
+  // apply sorts (multi-level)
+  if (S.sorts.length) {
+    rows.sort((a,b) => {
+      for (const s of S.sorts) {
+        const va = a[s.field], vb = b[s.field];
+        if (va < vb) return s.dir==='asc' ? -1 : 1;
+        if (va > vb) return s.dir==='asc' ?  1 : -1;
+      }
+      return 0;
+    });
+  }
+  return rows;
+}
+
+// position a fixed dropdown under an element
+function positionDropdown(dd, el) {
+  const r   = el.getBoundingClientRect();
+  const vw  = window.innerWidth;
+  const vh  = window.innerHeight;
+
+  // Vertical: below by default, flip above if not enough space
+  let top = r.bottom + 4;
+  dd.style.top  = top + 'px';
+  dd.style.left = '0px'; // temp, measure width after paint
+  dd.style.visibility = 'hidden';
+
+  requestAnimationFrame(() => {
+    const dw = dd.offsetWidth;
+    const dh = dd.offsetHeight;
+
+    // Horizontal: align to left of button, shift left if overflows right
+    let left = r.left;
+    if (left + dw > vw - 8) left = Math.max(8, vw - dw - 8);
+
+    // Vertical: flip above if overflows bottom
+    if (top + dh > vh - 8) top = Math.max(8, r.top - dh - 4);
+
+    dd.style.top  = top + 'px';
+    dd.style.left = left + 'px';
+    dd.style.visibility = '';
+  });
+}
+
+// close all dropdowns
+function closeDropdowns() {
+  S.filterAddOpen = false;
+  S.colFilterOpen = null;
+  S.colFilterDraft = null;
+  renderToolbar();
+  renderColFilterDrop();
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — STATE SWITCHER
+// ─────────────────────────────────────────────────────────
+const PRESET_STATES = [
+  {
+    label: 'По умолчанию',
+    desc:  'Чистый стол, без сортировок и фильтров',
+    apply() {
+      S.sorts=[]; S.filters=[]; S.colVis=Object.fromEntries(COLS.map(c=>[c.id,!c.hiddenByDefault]));
+      S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Панель сортировки',
+    desc:  'Открыта, 2 условия сортировки',
+    apply() {
+      S.sorts=[{field:'fio',dir:'asc'},{field:'date',dir:'desc'}];
+      S.sortPanelOpen=true; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Активные фильтры',
+    desc:  'Статус + Подразделение выбраны',
+    apply() {
+      S.filters=[
+        {field:'status',   values:['Активен']},
+        {field:'dept',     values:['Аналитика','Разработка']},
+      ];
+      S.sorts=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Фильтр колонки',
+    desc:  'Чекбокс-дропдаун "Статус"',
+    apply() {
+      S.colFilterOpen='status';
+      S.colFilterDraft={ field:'status', sel: new Set(['Активен']) };
+      S.sortPanelOpen=false; S.settingsOpen=false; S.filterAddOpen=false;
+      // position after render — handled in renderColFilterDrop
+    }
+  },
+  {
+    label: 'Настройка колонок',
+    desc:  'Боковая панель с чекбоксами',
+    apply() {
+      S.settingsOpen=true; S.sortPanelOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Пагинация',
+    desc:  'Постраничная навигация',
+    apply() {
+      S.showPagination=true; S.currentPage=1; S.pageSize=10;
+      S.filters=[]; S.sorts=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Ошибки в данных',
+    desc:  'Красные ячейки с проблемами',
+    apply() {
+      // Mark errors: row 1 → dept, row 3 → name+status, row 5 → dept
+      S.errorCells = { 1: ['dept'], 3: ['name','status'], 5: ['dept'] };
+      S.filters=[]; S.sorts=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Поиск',
+    desc:  'Строка поиска над фильтрами',
+    apply() {
+      S.showSearch=true; S.searchQuery='Иван';
+      S.filters=[]; S.sorts=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+  {
+    label: 'Меню строки',
+    desc:  '3-dot меню с действиями',
+    apply() {
+      S.sorts=[]; S.filters=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+      S.rowMenuMode=true; S.openRowMenu=null;
+    }
+  },
+  {
+    label: 'Раскрытые строки',
+    desc:  'Клик по строке — детали внутри',
+    apply() {
+      S.sorts=[]; S.filters=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+      S.expandableRows=true; S.expandedRows=new Set();
+    }
+  },
+  {
+    label: 'Расширенные фильтры',
+    desc:  'Сайдбар с полями и значениями',
+    apply() {
+      S.sorts=[]; S.filters=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+      S.filterSidebarOpen=true;
+      S.filterSidebarExpanded=null;
+      S.filterSidebarDrafts={};
+      // открываем сайдбар после рендера
+      setTimeout(() => {
+        $('filterSidebarOverlay')?.classList.add('open');
+        $('filterSidebar')?.classList.add('open');
+        renderFilterSidebar();
+      }, 0);
+    }
+  },
+  {
+    label: 'Empty state',
+    desc:  'Нет записей по фильтру',
+    apply() {
+      S.filters=[
+        {field:'status', values:['Заблокирован']},
+        {field:'dept',   values:['Финансы']},
+      ];
+      S.forceEmpty=true;
+      S.sorts=[]; S.sortPanelOpen=false; S.settingsOpen=false;
+      S.filterAddOpen=false; S.colFilterOpen=null; S.colFilterDraft=null;
+    }
+  },
+];
+
+function renderStateSwitcher() {
+  const bar = $('stateBar');
+  bar.innerHTML = `
+    <div class="state-bar-title">Состояния</div>`;
+  PRESET_STATES.forEach((ps,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'state-btn' + (S.activeState===i ? ' active':'');
+    btn.innerHTML = `<strong>${ps.label}</strong><span>${ps.desc}</span>`;
+    btn.onclick = () => {
+      S.activeState = i;
+      S.forceEmpty = false;
+      S.showSearch = false;
+      S.searchQuery = '';
+      S.errorCells = null;
+      S.showPagination = false;
+      S.currentPage = 1;
+      S.expandableRows = false;
+      S.expandedRows = new Set();
+      S.rowMenuMode = false;
+      S.openRowMenu = null;
+      ps.apply();
+      renderAll();
+      if (i===3) setTimeout(autoPositionColFilter, 50);
+    };
+    bar.appendChild(btn);
+    if (i===0) {
+      const sep = document.createElement('div');
+      sep.className = 'state-bar-sep';
+      bar.appendChild(sep);
+    }
+  });
+
+
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — TOOLBAR
+// ─────────────────────────────────────────────────────────
+function renderToolbar() {
+  const activeFilterCount = S.filters.length;
+  const activeSortCount   = S.sorts.length;
+  $('topbar').innerHTML = `
+    <div class="topbar-row">
+      <span class="topbar-title">Сотрудники</span>
+      <span class="topbar-subtitle" style="font-size:12px;color:var(--text-f);">${getSortedFiltered().length} из ${ROWS.length}</span>
+    </div>
+    ${S.showSearch ? `
+    <div class="search-wrap">
+      <div class="search-field">
+        <div class="search-input-wrap">
+          <input class="search-input" id="searchInput" placeholder="Поиск..." value="${S.searchQuery}" autocomplete="off">
+          <div class="search-right">
+            <div class="search-icon-right">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            ${S.searchQuery ? `<div class="search-sep"></div><button class="search-clear" id="searchClear">×</button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>` : ''}
+    <div class="topbar-row">
+      <div class="topbar-left">
+
+    <div style="position:relative" id="sortWrap">
+    <button class="btn ${S.sortPanelOpen?'active':''}" id="btnSort" title="Управление сортировкой">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6 12H18M3 6H21M9 18H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Сортировка
+      ${activeSortCount ? `<span class="badge">${activeSortCount}</span>` : ''}
+    </button>
+    <div class="sort-panel ${S.sortPanelOpen?'open':''}" id="sortPanel"></div>
+    </div>
+
+    <div style="position:relative" id="filterAddWrap">
+      <button class="btn" id="btnFilterAdd">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M2 4.6C2 4.03995 2 3.75992 2.10899 3.54601C2.20487 3.35785 2.35785 3.20487 2.54601 3.10899C2.75992 3 3.03995 3 3.6 3H20.4C20.9601 3 21.2401 3 21.454 3.10899C21.6422 3.20487 21.7951 3.35785 21.891 3.54601C22 3.75992 22 4.03995 22 4.6V5.26939C22 5.53819 22 5.67259 21.9672 5.79756C21.938 5.90831 21.8901 6.01323 21.8255 6.10776C21.7526 6.21443 21.651 6.30245 21.4479 6.4785L15.0521 12.0215C14.849 12.1975 14.7474 12.2856 14.6745 12.3922C14.6099 12.4868 14.562 12.5917 14.5328 12.7024C14.5 12.8274 14.5 12.9618 14.5 13.2306V18.4584C14.5 18.6539 14.5 18.7517 14.4685 18.8363C14.4406 18.911 14.3953 18.9779 14.3363 19.0315C14.2695 19.0922 14.1787 19.1285 13.9971 19.2012L10.5971 20.5612C10.2296 20.7082 10.0458 20.7817 9.89827 20.751C9.76927 20.7242 9.65605 20.6476 9.58325 20.5377C9.5 20.4122 9.5 20.2142 9.5 19.8184V13.2306C9.5 12.9618 9.5 12.8274 9.46715 12.7024C9.43805 12.5917 9.39014 12.4868 9.32551 12.3922C9.25258 12.2856 9.15102 12.1975 8.94789 12.0215L2.55211 6.4785C2.34898 6.30245 2.24742 6.21443 2.17449 6.10776C2.10986 6.01323 2.06195 5.90831 2.03285 5.79756C2 5.67259 2 5.53819 2 5.26939V4.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Добавить фильтр
+        ${activeFilterCount ? `<span class="badge">${activeFilterCount}</span>` : ''}
+      </button>
+      <div class="filter-add-drop ${S.filterAddOpen?'open':''}" id="dropFilterAdd"></div>
+    </div>
+
+    ${S.filters.length ? `
+      <div class="inline-filter-chips" id="inlineFilterChips">
+        ${renderInlineFilterChips()}
+        <button class="reset-all-chip" id="btnResetAllFilters">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3h8v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1.5-1.5h5M5 5.5v3M7 5.5v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Очистить фильтры
+        </button>
+      </div>` : ''}
+      </div><!-- /topbar-left -->
+
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
+    <button class="btn" id="btnAdvancedFilters" style="gap:6px">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3" r="1.2" stroke="currentColor" stroke-width="1.3"/><circle cx="4" cy="7" r="1.2" stroke="currentColor" stroke-width="1.3"/><circle cx="4" cy="11" r="1.2" stroke="currentColor" stroke-width="1.3"/><path d="M6.5 3h5M6.5 7h5M6.5 11h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Расш. фильтры
+    </button>
+    <div style="position:relative;flex-shrink:0" id="settingsWrap">
+    <button class="btn btn-primary" id="btnSettings">
+      Настроить
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0">
+        <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="settings-panel ${S.settingsOpen?'open':''}" id="settingsPanel">
+      <div class="sp-item" id="btnColVis" style="cursor:pointer">
+        <span class="sp-item-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8C2.2 5.5 4.8 3.5 8 3.5C11.2 3.5 13.8 5.5 15 8C13.8 10.5 11.2 12.5 8 12.5C4.8 12.5 2.2 10.5 1 8Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/></svg></span>
+        <span class="sp-item-label">Видимость колонок</span>
+        ${(()=>{ const visible = COLS.filter(c=>S.colVis[c.id]).length; const total = COLS.length; return `<span style="font-size:12px;color:var(--text-f);min-width:28px;text-align:right">${visible}/${total}</span>`; })()}
+        <span class="sp-item-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </div>
+      <div class="sp-item">
+        <span class="sp-item-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M2 6h12M2 10h12M6 2v12" stroke="currentColor" stroke-width="1.4"/></svg></span>
+        <span class="sp-item-label">Номер строки</span>
+        <label class="sp-toggle"><input type="checkbox" id="toggleRowNum" ${S.showRowNum?'checked':''}><span class="sp-toggle-track"></span></label>
+      </div>
+      <div class="sp-item">
+        <span class="sp-item-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 7h12" stroke="currentColor" stroke-width="1.4"/></svg></span>
+        <span class="sp-item-label">Закрытые фильтры</span>
+        <label class="sp-toggle"><input type="checkbox" id="toggleClosedFilters" ${S.showClosedFilters?'checked':''}><span class="sp-toggle-track"></span></label>
+      </div>
+    </div>
+    <div class="sp-colvis-panel ${S.colVisOpen?'open':''}" id="colVisPanel">
+      <div class="sp-colvis-header">
+        <button class="sp-colvis-back" id="btnColVisBack">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        Видимость колонок
+        <button id="btnColVisReset" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-f);padding:2px 6px;border-radius:4px;transition:color .1s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-f)'">По умолчанию</button>
+      </div>
+      <div class="sp-colvis-list" id="colVisList">
+        ${COLS.map(c => `
+          <div class="sp-colvis-row ${S.colVis[c.id]?'':'hidden-col'}" data-colid="${c.id}" draggable="true">
+            <span class="sp-colvis-drag">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 3h1M4 7h1M4 11h1M9 3h1M9 7h1M9 11h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <span class="sp-colvis-name">${c.label}</span>
+            <button class="sp-colvis-eye ${S.colVis[c.id]?'':'hidden'}" data-colid="${c.id}">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8C2.2 5.5 4.8 3.5 8 3.5C11.2 3.5 13.8 5.5 15 8C13.8 10.5 11.2 12.5 8 12.5C4.8 12.5 2.2 10.5 1 8Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    </div>
+    </div>
+  `;
+
+
+
+  // Closed filter pill handlers
+  document.querySelectorAll('.cf-pill').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const field = btn.dataset.field;
+      const advancedIdx = PRESET_STATES.findIndex(s => s.label === 'Расширенные фильтры');
+      if (S.activeState === advancedIdx) {
+        // В режиме расширенных фильтров — открыть сайдбар на нужном поле
+        openFilterSidebar();
+        S.filterSidebarExpanded = field;
+        renderFilterSidebar();
+      } else {
+        S.closedFilterOpen = S.closedFilterOpen === field ? null : field;
+        S.filterAddOpen = false; S.settingsOpen = false; S.colVisOpen = false; S.sortPanelOpen = false;
+        renderToolbar();
+      }
+    };
+  });
+  document.querySelectorAll('.cf-dd-del').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const field = btn.dataset.field; const val = btn.dataset.val;
+      const fi = S.filters.findIndex(f => f.field === field);
+      if (fi === -1) return;
+      const f = S.filters[fi];
+      f.values = f.values.filter(v => v !== val);
+      if (!f.values.length) S.filters.splice(fi, 1);
+      S.activeState = -1;
+      if (!S.filters.find(f => f.field === field)) S.closedFilterOpen = null;
+      renderToolbar(); renderSortPanel(); renderTableHead(); renderTableBody();
+    };
+  });
+  document.querySelectorAll('.cf-dd-clear').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const field = btn.dataset.field;
+      S.filters = S.filters.filter(f => f.field !== field);
+      S.closedFilterOpen = null; S.activeState = -1;
+      renderToolbar(); renderSortPanel(); renderTableHead(); renderTableBody();
+    };
+  });
+  document.querySelectorAll('.cf-dd-add').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const field = btn.dataset.field;
+      // Save pill button rect BEFORE closing the dropdown
+      const pillBtn = btn.closest('.cf-pill-wrap')?.querySelector('.cf-pill');
+      const rect = pillBtn ? pillBtn.getBoundingClientRect() : btn.getBoundingClientRect();
+      S.closedFilterOpen = null;
+      S.colFilterOpen = field;
+      const existing = S.filters.find(f => f.field === field);
+      S.colFilterDraft = { field, sel: new Set(existing ? existing.values : []) };
+      renderToolbar(); renderSortPanel(); renderColFilterDrop();
+      const dd = $('dropColFilter');
+      if (dd && dd.classList.contains('open')) {
+        dd.style.position = 'fixed';
+        dd.style.top = (rect.bottom + 6) + 'px';
+        dd.style.left = rect.left + 'px';
+      }
+    };
+  });
+
+  // Inline filter group — click to edit
+  document.querySelectorAll('.inline-filter-group-clickable').forEach(group => {
+    group.onclick = e => {
+      if (e.target.closest('.inline-group-del') || e.target.closest('.inline-chip-del')) return;
+      e.stopPropagation();
+      const field = group.dataset.field;
+      const rect = group.getBoundingClientRect();
+      S.filterAddOpen = false;
+      S.colFilterOpen = field;
+      const existing = S.filters.find(f => f.field === field);
+      S.colFilterDraft = { field, sel: new Set(existing ? existing.values : []) };
+      renderToolbar();
+      renderSortPanel();
+      renderColFilterDrop();
+      const colDd = $('dropColFilter');
+      if (colDd && colDd.classList.contains('open')) {
+        colDd.style.position = 'fixed';
+        colDd.style.top  = (rect.bottom + 6) + 'px';
+        colDd.style.left = rect.left + 'px';
+      }
+    };
+  });
+
+  // Inline filter group delete (whole field)
+  document.querySelectorAll('.inline-group-del').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      S.filters = S.filters.filter(f => f.field !== btn.dataset.field);
+      S.activeState = -1;
+      renderToolbar(); renderSortPanel(); renderTableBody();
+    };
+  });
+
+  // Inline filter chip handlers
+  document.querySelectorAll('.inline-chip-del').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const fi = +btn.dataset.fi; const val = btn.dataset.val;
+      const f = S.filters[fi];
+      if (!f) return;
+      if (f.values.length <= 1 || val === 'Все') S.filters.splice(fi, 1);
+      else f.values = f.values.filter(v => v !== val);
+      S.activeState = -1;
+      renderToolbar(); renderSortPanel(); renderTableHead(); renderTableBody();
+    };
+  });
+  $('btnResetAllFilters')?.addEventListener('click', e => {
+    e.stopPropagation();
+    S.filters = []; S.activeState = -1;
+    renderToolbar(); renderSortPanel(); renderTableHead(); renderTableBody();
+  });
+
+  document.querySelectorAll('.inline-chip-add').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const field = btn.dataset.field;
+      S.filterAddOpen = false;
+      S.settingsOpen = false;
+      S.sortPanelOpen = false;
+      S.colFilterOpen = field;
+      const existing = S.filters.find(f => f.field === field);
+      S.colFilterDraft = { field, sel: new Set(existing ? existing.values : []) };
+      // Save position BEFORE re-render
+      const rect = btn.getBoundingClientRect();
+      renderToolbar();
+      renderSortPanel();
+      renderColFilterDrop();
+      // Position after render
+      const dd = $('dropColFilter');
+      if (dd && dd.classList.contains('open')) {
+        dd.style.position = 'fixed';
+        dd.style.top = (rect.bottom + 6) + 'px';
+        dd.style.left = rect.left + 'px';
+      }
+    };
+  });
+
+  $('searchInput')?.addEventListener('input', e => {
+    S.searchQuery = e.target.value;
+    // Update X button without re-rendering toolbar (to preserve caret position)
+    const right = e.target.closest('.search-input-wrap')?.querySelector('.search-right');
+    if (right) {
+      const hasClear = !!right.querySelector('.search-clear');
+      if (S.searchQuery && !hasClear) {
+        right.insertAdjacentHTML('afterbegin', `<button class="search-clear" id="searchClear">×</button><div class="search-sep"></div>`);
+        $('searchClear').addEventListener('click', () => {
+          S.searchQuery = '';
+          renderToolbar(); renderTableHead(); renderTableBody();
+          $('searchInput')?.focus();
+        });
+      } else if (!S.searchQuery && hasClear) {
+        right.querySelector('.search-clear')?.remove();
+        right.querySelector('.search-sep')?.remove();
+      }
+    }
+    renderTableHead();
+    renderTableBody();
+  });
+  $('searchClear')?.addEventListener('click', () => {
+    S.searchQuery = '';
+    renderToolbar();
+    renderTableHead();
+    renderTableBody();
+    $('searchInput')?.focus();
+  });
+
+  $('btnSort').onclick = e => {
+    e.stopPropagation();
+    S.sortPanelOpen = !S.sortPanelOpen;
+    S.settingsOpen = false;
+    S.activeState = -1;
+    renderStateSwitcher();
+    renderToolbar();
+    renderSortPanel();
+  };
+
+  $('btnSettings').onclick = (e) => {
+    e.stopPropagation();
+    S.settingsOpen = !S.settingsOpen;
+    renderToolbar();
+    renderSortPanel();
+  };
+  $('spFilterRow')?.addEventListener('click', () => {
+    S.settingsOpen = false;
+    S.sortPanelOpen = false;
+    S.filterAddOpen = true;
+    S.colFilterOpen = null;
+    renderToolbar();
+    renderSortPanel();
+    renderFilterAddDrop();
+  });
+  $('spSortRow')?.addEventListener('click', () => {
+    S.settingsOpen = false;
+    S.sortPanelOpen = true;
+    renderToolbar();
+    renderSortPanel();
+  });
+  $('toggleRowNum')?.addEventListener('change', (e) => { S.showRowNum = e.target.checked; if (!S.showRowNum) S.selectedRows.clear(); renderTableHead(); renderTableBody(); });
+  $('toggleClosedFilters')?.addEventListener('change', (e) => { S.showClosedFilters = e.target.checked; S.closedFilterOpen = null; renderToolbar(); renderTableHead(); renderTableBody(); });
+
+  // Column visibility submenu
+  $('btnColVis')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    S.colVisOpen = true;
+    S.settingsOpen = false;
+    renderToolbar();
+  });
+  $('btnColVisBack')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    S.colVisOpen = false;
+    S.settingsOpen = true;
+    renderToolbar();
+  });
+  $('btnColVisReset')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    COLS.length = 0;
+    COLS_DEFAULT.forEach(c => COLS.push({...c}));
+    S.colVis = Object.fromEntries(COLS.map(c => [c.id, !c.hiddenByDefault]));
+    renderToolbar(); renderTableHead(); renderTableBody();
+  });
+  document.querySelectorAll('.sp-colvis-eye').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const colId = btn.dataset.colid;
+      const visibleCols = COLS.filter(c => S.colVis[c.id]);
+      if (S.colVis[colId] && visibleCols.length <= 1) return; // минимум 1 колонка
+      S.colVis[colId] = !S.colVis[colId];
+      renderToolbar(); renderTableHead(); renderTableBody();
+    });
+  });
+
+  // Drag & drop для колонок в панели видимости
+  let colDragSrc = null;
+  document.querySelectorAll('#colVisList .sp-colvis-row').forEach(row => {
+    row.addEventListener('dragstart', (e) => {
+      colDragSrc = row.dataset.colid;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      document.querySelectorAll('#colVisList .sp-colvis-row').forEach(r => r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('#colVisList .sp-colvis-row').forEach(r => r.classList.remove('drag-over'));
+      if (row.dataset.colid !== colDragSrc) row.classList.add('drag-over');
+    });
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const targetId = row.dataset.colid;
+      if (!colDragSrc || colDragSrc === targetId) return;
+      const fromIdx = COLS.findIndex(c => c.id === colDragSrc);
+      const toIdx   = COLS.findIndex(c => c.id === targetId);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const [moved] = COLS.splice(fromIdx, 1);
+      COLS.splice(toIdx, 0, moved);
+      renderToolbar(); renderTableHead(); renderTableBody();
+    });
+  });
+
+  $('btnFilterAdd').onclick = e => {
+    e.stopPropagation();
+    S.filterAddOpen = !S.filterAddOpen;
+    S.colFilterOpen = null;
+    S.colFilterDraft = null;
+    if (S.filterAddOpen) {
+      S.sortPanelOpen = false;
+      S.settingsOpen = false;
+    }
+    renderToolbar();
+    renderSortPanel();
+    renderFilterAddDrop();
+  };
+
+  const btnAdv = $('btnAdvancedFilters');
+  if (btnAdv) btnAdv.onclick = e => {
+    e.stopPropagation();
+    if (S.filterSidebarOpen) closeFilterSidebar();
+    else openFilterSidebar();
+  };
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — FILTER ADD DROPDOWN
+// ─────────────────────────────────────────────────────────
+function renderFilterAddDrop() {
+  const dd = $('dropFilterAdd');
+  if (!dd) return;
+  if (!S.filterAddOpen) { dd.className = 'filter-add-drop'; return; }
+
+  const activeIds = new Set(S.filters.map(f=>f.field));
+  dd.innerHTML = `
+    <div class="dd-head">Выберите поле</div>
+    ${COLS.map(c=>`
+      <div class="dd-item ${activeIds.has(c.id)?'active':''}" data-field="${c.id}">
+        ${activeIds.has(c.id)
+          ? `<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="1,6 4.5,9.5 11,2.5" stroke="var(--accent)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+          : `<span style="width:12px;display:inline-block"></span>`
+        }
+        ${c.label}
+      </div>
+    `).join('')}
+  `;
+  dd.className = 'filter-add-drop open';
+
+  dd.querySelectorAll('.dd-item').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const field = el.dataset.field;
+      const existing = S.filters.find(f=>f.field===field);
+      if (existing) {
+        // уже активен — снять фильтр
+        S.filters = S.filters.filter(f=>f.field!==field);
+        S.activeState = -1;
+        S.filterAddOpen = false;
+        renderAll();
+      } else {
+        // новый — закрыть список колонок, открыть чекбоксы значений
+        const rect = $('btnFilterAdd').getBoundingClientRect();
+        S.filterAddOpen = false;
+        S.colFilterOpen = field;
+        S.colFilterDraft = { field, sel: new Set() };
+        renderToolbar();
+        renderSortPanel();
+        renderColFilterDrop();
+        const colDd = $('dropColFilter');
+        if (colDd && colDd.classList.contains('open')) {
+          colDd.style.position = 'fixed';
+          colDd.style.top  = (rect.bottom + 6) + 'px';
+          colDd.style.left = rect.left + 'px';
+        }
+      }
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+// FILTER SIDEBAR
+// ─────────────────────────────────────────────────────────
+function openFilterSidebar() {
+  S.filterSidebarDrafts = {};
+  S.filters.forEach(f => {
+    S.filterSidebarDrafts[f.field] = new Set(f.values);
+  });
+  S.filterSidebarOpen = true;
+  S.filterSidebarExpanded = null;
+  $('filterSidebar').classList.add('open');
+  renderFilterSidebar();
+}
+
+function closeFilterSidebar() {
+  S.filterSidebarOpen = false;
+  $('filterSidebar').classList.remove('open');
+}
+
+// Мета-группы: качество данных
+const META_QUALITY = [
+  { id: 'complete',   dot: '#16a34a', label: 'Только заполненные' },
+  { id: 'incomplete', dot: '#d97706', label: 'Есть пустые поля'   },
+  { id: 'duplicates', dot: '#d93649', label: 'Дубликаты'          },
+];
+// Мета-секции: дополнительные атрибуты (с тогглом вкл/выкл)
+const META_SECTIONS = [
+  { id: 'sec_docs',    label: 'Документы',      items: [
+    { id: 'has_passport', dot: '#16a34a', label: 'Паспорт загружен' },
+    { id: 'has_contract', dot: '#0e7d8f', label: 'Договор подписан' },
+  ]},
+  { id: 'sec_contact', label: 'Контакты',       items: [
+    { id: 'has_phone', dot: '#16a34a', label: 'Телефон подтверждён' },
+    { id: 'has_email', dot: '#0e7d8f', label: 'Email заполнен'      },
+  ]},
+  { id: 'sec_quality', label: 'Качество данных', items: [
+    { id: 'q_verified', dot: '#16a34a', label: 'Проверено'          },
+    { id: 'q_suspect',  dot: '#d97706', label: 'Требует проверки'   },
+    { id: 'q_error',    dot: '#d93649', label: 'Ошибка данных'      },
+  ]},
+];
+
+function renderFilterSidebarMeta() {
+  const el = $('filterSidebarMeta');
+  if (!el) return;
+
+  const qualityHTML = `
+    <div class="fsb-meta-group">
+      <div class="fsb-meta-group-title">Качество записи</div>
+      ${META_QUALITY.map(f => {
+        const on = !!S.filterSidebarMeta[f.id];
+        return `<label class="fsb-meta-item ${on ? 'active' : ''}">
+          <input type="checkbox" data-meta="${f.id}" ${on ? 'checked' : ''}>
+          <span class="fsb-meta-dot" style="background:${f.dot}"></span>
+          <span>${f.label}</span>
+        </label>`;
+      }).join('')}
+    </div>`;
+
+  const sectionsHTML = META_SECTIONS.map(sec => {
+    const expanded = !!S.filterSidebarMeta['__exp_' + sec.id];
+    const togOn = S.filterSidebarMeta['__tog_' + sec.id] !== false; // default ON
+    return `
+      <div class="fsb-meta-section ${expanded ? 'expanded' : ''}" data-sec="${sec.id}">
+        <span class="fsb-meta-section-chevron">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M4.5 2.5l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="fsb-meta-section-label">${sec.label}</span>
+        <label class="sp-mini-toggle" title="Включить/выключить">
+          <input type="checkbox" data-sectog="${sec.id}" ${togOn ? 'checked' : ''}>
+          <span class="sp-mini-track"></span>
+        </label>
+      </div>
+      <div class="fsb-meta-section-body">
+        ${sec.items.map(f => {
+          const on = !!S.filterSidebarMeta[f.id];
+          return `<label class="fsb-meta-item ${on ? 'active' : ''}">
+            <input type="checkbox" data-meta="${f.id}" ${on ? 'checked' : ''}>
+            <span class="fsb-meta-dot" style="background:${f.dot}"></span>
+            <span>${f.label}</span>
+          </label>`;
+        }).join('')}
+      </div>`;
+  }).join('');
+
+  el.innerHTML = qualityHTML + sectionsHTML;
+
+  // Чекбоксы качества и подпунктов секций
+  el.querySelectorAll('input[data-meta]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.dataset.meta;
+      S.filterSidebarMeta[id] = cb.checked;
+      if (!cb.checked) delete S.filterSidebarMeta[id];
+      renderFilterSidebarMeta();
+      renderTableBody();
+    });
+  });
+
+  // Раскрытие секций
+  el.querySelectorAll('.fsb-meta-section').forEach(sec => {
+    sec.addEventListener('click', (e) => {
+      if (e.target.closest('.sp-mini-toggle')) return;
+      const id = sec.dataset.sec;
+      const key = '__exp_' + id;
+      S.filterSidebarMeta[key] = !S.filterSidebarMeta[key];
+      if (!S.filterSidebarMeta[key]) delete S.filterSidebarMeta[key];
+      renderFilterSidebarMeta();
+    });
+  });
+
+  // Тогглы секций
+  el.querySelectorAll('input[data-sectog]').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const id = cb.dataset.sectog;
+      S.filterSidebarMeta['__tog_' + id] = cb.checked;
+      renderTableBody();
+    });
+  });
+}
+
+function applyMetaFilter(rows) {
+  const active = Object.keys(S.filterSidebarMeta).filter(k => S.filterSidebarMeta[k]);
+  if (!active.length) return rows;
+
+  // Дубликаты: строки, у которых есть хотя бы ещё одна копия по всем полям
+  let dupSet = null;
+  if (active.includes('duplicates')) {
+    const counts = {};
+    rows.forEach(r => {
+      const key = COLS.map(c => String(r[c.id] ?? '')).join('|');
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    dupSet = new Set();
+    rows.forEach(r => {
+      const key = COLS.map(c => String(r[c.id] ?? '')).join('|');
+      if (counts[key] > 1) dupSet.add(r);
+    });
+  }
+
+  return rows.filter(r => {
+    const fields = COLS.map(c => r[c.id]);
+    const hasEmpty = fields.some(v => v == null || v === '');
+
+    if (active.includes('complete')   && hasEmpty)           return false;
+    if (active.includes('incomplete') && !hasEmpty)          return false;
+    if (active.includes('duplicates') && !dupSet.has(r))     return false;
+    return true;
+  });
+}
+
+function renderFilterSidebar() {
+  renderFilterSidebarMeta();
+  const body = $('filterSidebarBody');
+  if (!body) return;
+
+  body.innerHTML = '';
+
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — SORT PANEL
+// ─────────────────────────────────────────────────────────
+function renderSortPanel() {
+  const panel = $('sortPanel');
+  panel.className = 'sort-panel' + (S.sortPanelOpen ? ' open' : '');
+
+  if (!S.sortPanelOpen) { panel.innerHTML = ''; return; }
+
+  const colOptions = COLS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+
+  const chips = S.sorts.map((s,i)=>`
+    <div class="sort-chip">
+      <span class="sort-chip-idx">${i+1}</span>
+      <select class="chip-select" data-sort-idx="${i}" data-role="field">
+        ${COLS.map(c=>`<option value="${c.id}" ${c.id===s.field?'selected':''}>${c.label}</option>`).join('')}
+      </select>
+      <span class="chip-sep">—</span>
+      <select class="chip-select" data-sort-idx="${i}" data-role="dir">
+        <option value="asc"  ${s.dir==='asc' ?'selected':''}>↑ По возр.</option>
+        <option value="desc" ${s.dir==='desc'?'selected':''}>↓ По убыв.</option>
+      </select>
+      <button class="sort-chip-del" data-del-idx="${i}" title="Удалить">×</button>
+    </div>
+  `).join('');
+
+  const rows = S.sorts.map((s,i)=>`
+    <div class="sort-row">
+      <span class="sort-drag">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </span>
+      <select class="sort-select" data-sort-idx="${i}" data-role="field">
+        ${COLS.map(c=>`<option value="${c.id}" ${c.id===s.field?'selected':''}>${c.label}</option>`).join('')}
+      </select>
+      <select class="sort-select" data-sort-idx="${i}" data-role="dir">
+        <option value="asc"  ${s.dir==='asc' ?'selected':''}>По возрастанию</option>
+        <option value="desc" ${s.dir==='desc'?'selected':''}>По убыванию</option>
+      </select>
+      <button class="sort-row-del" data-del-idx="${i}" title="Удалить">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="sort-panel-header">
+      <span class="sort-panel-title">Сортировка</span>
+      <button class="sort-clear-btn" id="btnClearSorts" title="Сбросить всё">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 3h9v9.5a1 1 0 01-1 1H4a1 1 0 01-1-1V3zm2-2h5M5.5 6v5M9.5 6v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    ${rows || ''}
+    <button class="sort-add-btn" id="btnAddSort">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Добавить сортировку
+    </button>
+  `;
+
+  // Inline chip selects (compact chips in toolbar)
+  panel.querySelectorAll('.chip-select').forEach(sel=>{
+    sel.onchange = () => {
+      const idx = +sel.dataset.sortIdx;
+      if (sel.dataset.role==='field') S.sorts[idx].field = sel.value;
+      else                            S.sorts[idx].dir   = sel.value;
+      S.activeState = -1;
+      renderTableHead(); renderTableBody();
+    };
+  });
+
+  // Sort chip delete buttons
+  panel.querySelectorAll('.sort-chip-del').forEach(btn=>{
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      S.sorts.splice(+btn.dataset.delIdx, 1);
+      S.activeState = -1;
+      renderToolbar(); renderSortPanel();
+      if (S.sortPanelOpen) positionDropdown($('sortPanel'), $('btnSort'));
+      renderTableHead(); renderTableBody();
+    };
+  });
+
+  // Field/dir selects
+  panel.querySelectorAll('.sort-select').forEach(sel=>{
+    sel.onchange = () => {
+      const idx = +sel.dataset.sortIdx;
+      if (sel.dataset.role==='field') S.sorts[idx].field = sel.value;
+      else                            S.sorts[idx].dir   = sel.value;
+      S.activeState = -1;
+      // Update badge only — не трогать sort panel (он уже открыт и корректен)
+      const sortBtn = $('btnSort');
+      if (sortBtn) {
+        const ex = sortBtn.querySelector('.badge');
+        const n = S.sorts.length;
+        if (n && !ex) sortBtn.insertAdjacentHTML('beforeend', `<span class="badge">${n}</span>`);
+        else if (n && ex) ex.textContent = n;
+        else if (!n && ex) ex.remove();
+      }
+      renderTableHead();
+      renderTableBody();
+    };
+  });
+
+  // Delete buttons
+  panel.querySelectorAll('.sort-row-del').forEach(btn=>{
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      S.sorts.splice(+btn.dataset.delIdx, 1);
+      S.activeState = -1;
+      renderSortPanel();
+      updateSortBadge();
+      renderTableHead();
+      renderTableBody();
+    };
+  });
+
+  const updateSortBadge = () => {
+    const sortBtn = $('btnSort');
+    if (!sortBtn) return;
+    const ex = sortBtn.querySelector('.badge');
+    const n = S.sorts.length;
+    if (n && !ex) sortBtn.insertAdjacentHTML('beforeend', `<span class="badge">${n}</span>`);
+    else if (n && ex) ex.textContent = n;
+    else if (!n && ex) ex.remove();
+  };
+
+  $('btnAddSort').onclick = (e) => {
+    e.stopPropagation();
+    const used = new Set(S.sorts.map(s=>s.field));
+    const free = COLS.find(c=>!used.has(c.id));
+    if (free) S.sorts.push({ field: free.id, dir:'asc' });
+    else      S.sorts.push({ field: COLS[0].id, dir:'asc' });
+    S.activeState = -1;
+    renderSortPanel();
+    updateSortBadge();
+    renderTableHead();
+    renderTableBody();
+  };
+
+  $('btnClearSorts').onclick = (e) => {
+    e.stopPropagation();
+    S.sorts = []; S.activeState = -1;
+    renderSortPanel();
+    updateSortBadge();
+    renderTableHead(); renderTableBody();
+  };
+
+  $('btnSaveSorts')?.addEventListener('click', () => {
+    const btn = $('btnSaveSorts');
+    if (!btn) return;
+    btn.textContent = '✓ Сохранено';
+    btn.style.background = 'var(--green)';
+    setTimeout(()=>{ btn.textContent='Сохранить'; btn.style.background=''; }, 1400);
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — FILTER BAR
+// ─────────────────────────────────────────────────────────
+const filterIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M2 4.6C2 4.03995 2 3.75992 2.10899 3.54601C2.20487 3.35785 2.35785 3.20487 2.54601 3.10899C2.75992 3 3.03995 3 3.6 3H20.4C20.9601 3 21.2401 3 21.454 3.10899C21.6422 3.20487 21.7951 3.35785 21.891 3.54601C22 3.75992 22 4.03995 22 4.6V5.26939C22 5.53819 22 5.67259 21.9672 5.79756C21.938 5.90831 21.8901 6.01323 21.8255 6.10776C21.7526 6.21443 21.651 6.30245 21.4479 6.4785L15.0521 12.0215C14.849 12.1975 14.7474 12.2856 14.6745 12.3922C14.6099 12.4868 14.562 12.5917 14.5328 12.7024C14.5 12.8274 14.5 12.9618 14.5 13.2306V18.4584C14.5 18.6539 14.5 18.7517 14.4685 18.8363C14.4406 18.911 14.3953 18.9779 14.3363 19.0315C14.2695 19.0922 14.1787 19.1285 13.9971 19.2012L10.5971 20.5612C10.2296 20.7082 10.0458 20.7817 9.89827 20.751C9.76927 20.7242 9.65605 20.6476 9.58325 20.5377C9.5 20.4122 9.5 20.2142 9.5 19.8184V13.2306C9.5 12.9618 9.5 12.8274 9.46715 12.7024C9.43805 12.5917 9.39014 12.4868 9.32551 12.3922C9.25258 12.2856 9.15102 12.1975 8.94789 12.0215L2.55211 6.4785C2.34898 6.30245 2.24742 6.21443 2.17449 6.10776C2.10986 6.01323 2.06195 5.90831 2.03285 5.79756C2 5.67259 2 5.53819 2 5.26939V4.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function renderInlineFilterChips() {
+  // Group by field
+  const groups = {};
+  S.filters.forEach((f, i) => {
+    if (!groups[f.field]) groups[f.field] = [];
+    groups[f.field].push({ ...f, idx: i });
+  });
+
+  if (S.showClosedFilters) {
+    // Closed mode: compact pill "Label: N ↓"
+    return Object.entries(groups).map(([field, items]) => {
+      const label = colLabel(field);
+      const allVals = items.flatMap(f => f.values.length === uniqueVals(field).length ? ['Все'] : f.values);
+      const count = allVals.length;
+      const isOpen = S.closedFilterOpen === field;
+      const valsHtml = allVals.map(v => `
+        <div class="cf-dd-item">
+          <span>${v}</span>
+          <button class="cf-dd-del" data-field="${field}" data-val="${v}">×</button>
+        </div>`).join('');
+      return `<div class="cf-pill-wrap" style="position:relative">
+        <button class="cf-pill ${isOpen?'cf-pill-open':''}" data-field="${field}">
+          ${filterIcon} ${label}: ${count}
+          <svg width="10" height="10" viewBox="0 0 10 6" fill="none" style="margin-left:2px;transition:transform .15s;${isOpen?'transform:rotate(180deg)':''}">
+            <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        ${isOpen ? `<div class="cf-dropdown">
+          ${valsHtml}
+          <div class="cf-dd-footer">
+            <button class="cf-dd-add" data-field="${field}">Добавить +</button>
+            <button class="cf-dd-clear" data-field="${field}">Очистить</button>
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Open mode (default): expanded chips
+  return Object.entries(groups).map(([field, items]) => {
+    const label = colLabel(field);
+    const valChips = items.map(f => {
+      const allVals = f.values.length === uniqueVals(f.field).length ? ['Все'] : f.values;
+      return allVals.map(v => `<span class="inline-chip">${v}<button class="inline-chip-del" data-fi="${f.idx}" data-val="${v}">×</button></span>`).join('');
+    }).join('');
+    return `<span class="inline-filter-group inline-filter-group-clickable" data-field="${field}" title="Нажмите чтобы изменить фильтр">
+      <span class="inline-filter-label">${filterIcon} ${label}:</span>
+      ${valChips}
+      <button class="inline-group-del" data-field="${field}" title="Убрать фильтр">×</button>
+    </span>`;
+  }).join('');
+}
+
+function renderFilterBar() {
+  const bar = $('filterBar');
+  if (bar) bar.innerHTML = '';
+  return;
+
+  // Группируем по полю
+  const groups = {};
+  S.filters.forEach((f, i) => {
+    if (!groups[f.field]) groups[f.field] = [];
+    groups[f.field].push({ ...f, idx: i });
+  });
+
+  const filterIcon = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1h10l-3.5 4V11L4.5 9.5V5L1 1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>`;
+
+  const groupsHtml = Object.entries(groups).map(([field, items]) => {
+    const label = colLabel(field);
+    const chips = items.map(f => {
+      const vals = f.values.length === uniqueVals(f.field).length
+        ? ['Все значения']
+        : f.values;
+      return vals.map(v => `
+        <span class="filter-chip">
+          ${v}<button class="fc-del" data-fi="${f.idx}" data-val="${v}">×</button>
+        </span>
+      `).join('');
+    }).join('');
+    return `
+      <div class="filter-group" data-field="${field}">
+        <span class="fg-label">${filterIcon} ${label}:</span>
+        ${chips}
+        <button class="fc-add" data-field="${field}">Добавить +</button>
+      </div>
+    `;
+  }).join('');
+
+  bar.innerHTML = groupsHtml + `
+    <div class="filter-bar-footer">
+      <button class="reset-all-link" id="btnResetAll">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 2l7 7M9 2L2 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Очистить фильтры
+      </button>
+    </div>
+  `;
+
+  bar.querySelectorAll('.fc-del').forEach(btn => {
+    btn.onclick = () => {
+      const fi = +btn.dataset.fi;
+      const val = btn.dataset.val;
+      const f = S.filters[fi];
+      if (f.values.length <= 1 || val === 'Все значения') {
+        S.filters.splice(fi, 1);
+      } else {
+        f.values = f.values.filter(v => v !== val);
+      }
+      S.activeState = -1;
+      renderFilterBar(); renderToolbar(); renderSortPanel(); renderTableHead(); renderTableBody();
+    };
+  });
+
+  $('btnResetAll').onclick = () => {
+    S.filters = []; S.activeState = -1; S.selectedRows.clear();
+    renderFilterBar(); renderToolbar(); renderTableHead(); renderTableBody();
+  };
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — TABLE HEAD
+// ─────────────────────────────────────────────────────────
+function renderTableHead() {
+  const head = $('thead');
+  const cg = $('colgroup');
+  if (cg) {
+    const menuCol   = S.rowMenuMode ? `<col style="width:44px;min-width:44px;max-width:44px">` : '';
+    const selCol    = S.showRowNum  ? `<col style="width:44px;min-width:44px;max-width:44px">` : '';
+    const deleteCol = S.rowMenuMode ? `<col style="width:44px;min-width:44px;max-width:44px">` : '';
+    const visibleCols = COLS.filter(c => S.colVis[c.id]);
+    const totalPct = visibleCols.reduce((sum, c) => sum + parseFloat(c.w), 0);
+    const dataCols = COLS.map(c => {
+      if (!S.colVis[c.id]) return `<col style="width:0;padding:0;border:none">`;
+      const pct = (parseFloat(c.w) / totalPct * 100).toFixed(2);
+      return `<col style="width:${pct}%">`;
+    }).join('');
+    cg.innerHTML = selCol + menuCol + dataCols + deleteCol;
+  }
+
+  const allRows = getSortedFiltered();
+  const selCount = allRows.filter(r => S.selectedRows.has(ROWS.indexOf(r))).length;
+  const masterChecked = selCount === allRows.length && allRows.length > 0;
+  const masterIndet   = selCount > 0 && selCount < allRows.length;
+  const menuTh = S.rowMenuMode ? `<th class="th-menu"></th>` : '';
+  const selTh = S.showRowNum
+    ? `<th class="th-sel"><div class="th-inner"><input type="checkbox" id="masterCb" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer" ${masterChecked?'checked':''}></div></th>`
+    : '';
+
+  // Count errors per column for badge
+  const errColCount = {};
+  if (S.errorCells) Object.values(S.errorCells).forEach(cs => cs.forEach(col => { errColCount[col] = (errColCount[col]||0)+1; }));
+
+  const visibleTotal = COLS.filter(c => S.colVis[c.id]).reduce((s,c) => s + parseFloat(c.w), 0) || 1;
+  const cols = COLS.map(c=>{
+    const sort   = S.sorts.find(s=>s.field===c.id);
+    const hasF   = S.filters.some(f=>f.field===c.id);
+    const sortClass = sort ? 'th-sorted' : '';
+    const arrowSvgUp   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const arrowSvgDown = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M12 19L19 12M12 19L5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const arrow  = sort ? (sort.dir==='asc' ? arrowSvgUp : arrowSvgDown) : '';
+    const vis    = S.colVis[c.id] ? '' : ' col-hidden';
+    const colW   = S.colVis[c.id] ? `style="width:${(parseFloat(c.w)/visibleTotal*100).toFixed(2)}%"` : '';
+    const errCnt = errColCount[c.id] || 0;
+    return `
+      <th class="${sortClass}${vis}" ${colW} data-col="${c.id}">
+        <div class="th-inner">
+          <span class="th-sort" data-col="${c.id}">
+            ${c.label}
+            ${errCnt ? `<span class="th-error-badge">${errCnt}</span>` : ''}
+            ${arrow
+              ? `<span class="sort-arrow">${arrow}</span>`
+              : `<span class="sort-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M17 4V20M17 20L13 16M17 20L21 16M7 20V4M7 4L3 8M7 4L11 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+            }
+          </span>
+          <button class="th-filter-btn ${hasF?'has-filter':''}" data-filter-col="${c.id}" title="Фильтр по «${c.label}»">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M2 4.6C2 4.03995 2 3.75992 2.10899 3.54601C2.20487 3.35785 2.35785 3.20487 2.54601 3.10899C2.75992 3 3.03995 3 3.6 3H20.4C20.9601 3 21.2401 3 21.454 3.10899C21.6422 3.20487 21.7951 3.35785 21.891 3.54601C22 3.75992 22 4.03995 22 4.6V5.26939C22 5.53819 22 5.67259 21.9672 5.79756C21.938 5.90831 21.8901 6.01323 21.8255 6.10776C21.7526 6.21443 21.651 6.30245 21.4479 6.4785L15.0521 12.0215C14.849 12.1975 14.7474 12.2856 14.6745 12.3922C14.6099 12.4868 14.562 12.5917 14.5328 12.7024C14.5 12.8274 14.5 12.9618 14.5 13.2306V18.4584C14.5 18.6539 14.5 18.7517 14.4685 18.8363C14.4406 18.911 14.3953 18.9779 14.3363 19.0315C14.2695 19.0922 14.1787 19.1285 13.9971 19.2012L10.5971 20.5612C10.2296 20.7082 10.0458 20.7817 9.89827 20.751C9.76927 20.7242 9.65605 20.6476 9.58325 20.5377C9.5 20.4122 9.5 20.2142 9.5 19.8184V13.2306C9.5 12.9618 9.5 12.8274 9.46715 12.7024C9.43805 12.5917 9.39014 12.4868 9.32551 12.3922C9.25258 12.2856 9.15102 12.1975 8.94789 12.0215L2.55211 6.4785C2.34898 6.30245 2.24742 6.21443 2.17449 6.10776C2.10986 6.01323 2.06195 5.90831 2.03285 5.79756C2 5.67259 2 5.53819 2 5.26939V4.6Z" stroke="currentColor" stroke-width="1.5" ${hasF?'fill="currentColor" fill-opacity="0.15"':''} stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </th>
+    `;
+  }).join('');
+
+  const deleteTh = S.rowMenuMode ? `<th class="th-menu"></th>` : '';
+  head.innerHTML = `<tr>${selTh}${menuTh}${cols}${deleteTh}</tr>`;
+  if (S.showRowNum) {
+    const mcb = $('masterCb');
+    if (mcb) {
+      if (masterIndet) mcb.indeterminate = true;
+      mcb.onchange = () => {
+        const rows = getSortedFiltered();
+        if (mcb.checked) rows.forEach(r => S.selectedRows.add(ROWS.indexOf(r)));
+        else             rows.forEach(r => S.selectedRows.delete(ROWS.indexOf(r)));
+        renderTableHead();
+        renderTableBody();
+        const n = S.selectedRows.size;
+        const bb = $('bulkBar'); const bc = $('bulkCount');
+        if (bb && bc) { bb.style.display = n > 0 ? 'flex' : 'none'; bc.textContent = `Выбрано ${n}`; }
+      };
+    }
+  }
+
+  // Sort by header click
+  head.querySelectorAll('.th-sort').forEach(el=>{
+    el.onclick = ()=>{
+      const field = el.dataset.col;
+      const idx   = S.sorts.findIndex(s=>s.field===field);
+      if (idx===-1)                         S.sorts.push({field, dir:'asc'});
+      else if (S.sorts[idx].dir==='asc')    S.sorts[idx].dir = 'desc';
+      else                                  S.sorts.splice(idx, 1);
+      S.activeState = -1;
+      renderStateSwitcher();
+      renderSortPanel();
+      renderToolbar();
+      renderTableHead();
+      renderTableBody();
+    };
+  });
+
+  // Filter icon click
+  head.querySelectorAll('.th-filter-btn').forEach(btn=>{
+    btn.onclick = e=>{
+      e.stopPropagation();
+      const field = btn.dataset.filterCol;
+      if (S.colFilterOpen === field) {
+        S.colFilterOpen = null; S.colFilterDraft = null;
+      } else {
+        const existing = S.filters.find(f=>f.field===field);
+        S.colFilterOpen  = field;
+        S.colFilterDraft = { field, sel: new Set(existing ? existing.values : []) };
+      }
+      S.filterAddOpen = false;
+      renderColFilterDrop();
+      if (S.colFilterOpen) positionDropdown($('dropColFilter'), btn);
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — COLUMN FILTER DROPDOWN
+// ─────────────────────────────────────────────────────────
+function renderColFilterDrop() {
+  const dd = $('dropColFilter');
+  if (!S.colFilterOpen || !S.colFilterDraft) { dd.classList.remove('open'); return; }
+
+  const field  = S.colFilterDraft.field;
+  const vals   = uniqueVals(field);
+  const label  = colLabel(field);
+
+  const allChecked = vals.every(v => S.colFilterDraft.sel.has(v));
+  const someChecked = vals.some(v => S.colFilterDraft.sel.has(v));
+
+  dd.innerHTML = `
+    <div class="dd-head">Фильтр: ${label}</div>
+    <div style="padding:6px 0">
+      <label class="dd-check" style="border-bottom:1px solid var(--border);margin-bottom:3px;padding-bottom:9px">
+        <input type="checkbox" id="ddSelectAll" ${allChecked?'checked':''}>
+        <span style="font-weight:600;color:var(--text-m)">Выбрать все</span>
+      </label>
+      ${vals.map(v=>`
+        <label class="dd-check">
+          <input type="checkbox" value="${v}" ${S.colFilterDraft.sel.has(v)?'checked':''}>
+          ${field==='status'
+            ? `<span class="badge-status ${STATUS_CLASS[v]||''}">${v}</span>`
+            : v
+          }
+        </label>
+      `).join('')}
+    </div>
+    <div class="dd-foot">
+      <button class="dd-apply" id="ddColApply">Применить</button>
+      <button class="dd-cancel" id="ddColCancel">Сбросить</button>
+    </div>
+  `;
+  dd.classList.add('open');
+
+  // Select All checkbox
+  const selectAllCb = $('ddSelectAll');
+  if (selectAllCb) {
+    if (someChecked && !allChecked) selectAllCb.indeterminate = true;
+    selectAllCb.onchange = () => {
+      if (selectAllCb.checked) vals.forEach(v => S.colFilterDraft.sel.add(v));
+      else S.colFilterDraft.sel.clear();
+      dd.querySelectorAll('input[type=checkbox]:not(#ddSelectAll)').forEach(cb => {
+        cb.checked = selectAllCb.checked;
+      });
+    };
+  }
+
+  // Live checkbox updates to draft
+  dd.querySelectorAll('input[type=checkbox]:not(#ddSelectAll)').forEach(cb=>{
+    cb.onchange = ()=>{
+      if (cb.checked) S.colFilterDraft.sel.add(cb.value);
+      else            S.colFilterDraft.sel.delete(cb.value);
+      // Update select-all state
+      const all = vals.every(v => S.colFilterDraft.sel.has(v));
+      const some = vals.some(v => S.colFilterDraft.sel.has(v));
+      if (selectAllCb) {
+        selectAllCb.checked = all;
+        selectAllCb.indeterminate = some && !all;
+      }
+    };
+  });
+
+  $('ddColApply').onclick = ()=>{
+    const field = S.colFilterDraft.field;
+    const sel   = [...S.colFilterDraft.sel];
+    S.filters = S.filters.filter(f=>f.field!==field);
+    if (sel.length && sel.length < uniqueVals(field).length) {
+      S.filters.push({ field, values: sel });
+    } else if (sel.length === 0) {
+      // keep removed
+    } else {
+      // all selected = no filter effectively, but show chip
+      S.filters.push({ field, values: sel });
+    }
+    S.colFilterOpen=null; S.colFilterDraft=null;
+    S.activeState=-1;
+    renderAll();
+  };
+
+  $('ddColCancel').onclick = ()=>{
+    S.colFilterDraft.sel.clear();
+    dd.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    const sa = $('ddSelectAll');
+    if (sa) { sa.checked = false; sa.indeterminate = false; }
+  };
+}
+
+// For state preset #3: auto-position col filter dropdown after render
+function autoPositionColFilter() {
+  if (!S.colFilterOpen) return;
+  const btn = document.querySelector(`.th-filter-btn[data-filter-col="${S.colFilterOpen}"]`);
+  if (btn) {
+    renderColFilterDrop();
+    positionDropdown($('dropColFilter'), btn);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — TABLE BODY
+// ─────────────────────────────────────────────────────────
+function renderPagination(total) {
+  const foot = $('tfoot');
+  if (!foot) return;
+  if (!S.showPagination) { foot.innerHTML = ''; return; }
+
+  const totalPages = Math.max(1, Math.ceil(total / S.pageSize));
+  if (S.currentPage > totalPages) S.currentPage = totalPages;
+  const colCount = COLS.length + (S.showRowNum ? 1 : 0);
+
+  foot.innerHTML = `
+    <tr>
+      <td colspan="${colCount}" style="padding:0; border-top: 1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;font-size:13px;color:var(--text-m)">
+          <span>Всего записей: ${total}</span>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:6px">
+              Записей на странице:
+              <select id="pageSizeSelect" class="page-size-select">
+                ${[5,10,25,50].map(n=>`<option value="${n}"${n===S.pageSize?' selected':''}>${n}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <button class="page-nav-btn" id="pagePrev" ${S.currentPage<=1?'disabled':''}>
+                <svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button class="page-nav-btn" id="pageNext" ${S.currentPage>=totalPages?'disabled':''}>
+                <svg width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+
+  $('pageSizeSelect').onchange = e => { S.pageSize = +e.target.value; S.currentPage = 1; renderTableBody(); };
+  $('pagePrev').onclick  = () => { if (S.currentPage > 1) { S.currentPage--; renderTableBody(); } };
+  $('pageNext').onclick  = () => { if (S.currentPage < totalPages) { S.currentPage++; renderTableBody(); } };
+}
+
+function renderTableBody() {
+  let   rows = getSortedFiltered();
+  const total = rows.length;
+  const body = $('tbody');
+
+  renderPagination(total);
+
+  // Slice for pagination
+  if (S.showPagination) {
+    const start = (S.currentPage - 1) * S.pageSize;
+    rows = rows.slice(start, start + S.pageSize);
+  }
+
+  if (!rows.length) {
+    const cols = COLS.length + (S.showRowNum ? 1 : 0);
+    body.innerHTML = `
+      <tr class="empty-row">
+        <td colspan="${cols}" style="padding: 48px 24px; text-align:center; border-bottom:none">
+          <div style="display:inline-flex;flex-direction:column;align-items:center;gap:12px;max-width:280px">
+            <div style="width:44px;height:44px;border-radius:12px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text-f)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Ничего не найдено</div>
+              <div style="font-size:13px;color:var(--text-m);line-height:1.5">Нет записей, соответствующих<br>выбранным фильтрам</div>
+            </div>
+            <button onclick="S.filters=[];S.forceEmpty=false;S.activeState=-1;renderStateSwitcher();renderToolbar();renderTableHead();renderTableBody();" style="display:inline-flex;align-items:center;gap:8px;padding:0 20px;height:38px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s" onmouseover="this.style.background='var(--accent-h)'" onmouseout="this.style.background='var(--accent)'">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1h12l-4 5v6l-4-2V6L1 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>
+              Очистить фильтры
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map((r, i) => {
+    const origIdx = ROWS.indexOf(r);
+    const isSel   = S.selectedRows.has(origIdx);
+    const isExp   = S.expandableRows && S.expandedRows.has(origIdx);
+    const selTd   = S.showRowNum ? `
+      <td class="td-sel" data-orig="${origIdx}">
+        <div class="td-sel-inner">
+          <span class="row-num">${i+1}</span>
+          <input type="checkbox" class="row-cb" ${isSel?'checked':''}>
+        </div>
+      </td>` : '';
+
+    const chevron = S.expandableRows
+      ? `<span class="row-chevron"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+      : '';
+
+    const isMenuOpen = S.rowMenuMode && S.openRowMenu === origIdx;
+    const menuTd = S.rowMenuMode ? `<td class="td-menu"><div class="td-menu-inner"><button class="row-menu-btn" data-menu-orig="${origIdx}"><svg width="3" height="13" viewBox="0 0 3 13" fill="none"><circle cx="1.5" cy="1.5" r="1.5" fill="currentColor"/><circle cx="1.5" cy="6.5" r="1.5" fill="currentColor"/><circle cx="1.5" cy="11.5" r="1.5" fill="currentColor"/></svg></button></div></td>` : '';
+    const deleteTd = S.rowMenuMode ? `<td class="td-delete"><div class="td-menu-inner"><button class="row-delete-btn" data-delete-orig="${origIdx}"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5.5 3.5V2.5h3v1M3.5 3.5l.7 8h5.6l.7-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td>` : '';
+    const menuBtn = '';
+
+    const mainRow = `
+      <tr class="${isSel?'row-selected':''} ${S.expandableRows?'row-expandable':''} ${isExp?'row-expanded':''} ${isMenuOpen?'menu-open':''}" data-orig="${origIdx}">
+        ${selTd}
+        ${menuTd}
+
+        ${COLS.map((c, ci)=>{
+          const vis = S.colVis[c.id] ? '' : ' col-hidden';
+          const isErr = S.errorCells && S.errorCells[origIdx]?.includes(c.id);
+          let cell = r[c.id];
+          if (c.id==='status') cell = `<span class="badge-status ${STATUS_CLASS[cell]||''}">${cell}</span>`;
+          // Шеврон только в первой видимой колонке
+          const isFirstVisible = ci === COLS.findIndex(col => S.colVis[col.id]);
+          const inner = isFirstVisible && S.expandableRows
+            ? `<div class="td-fio-inner">${chevron}<span>${cell}</span></div>`
+            : isFirstVisible && S.rowMenuMode
+            ? `<div class="td-fio-inner">${menuBtn}<span>${cell}</span></div>`
+            : cell;
+          return `<td class="${vis}${isErr?' cell-error':''}" title="${typeof r[c.id]==='string'?r[c.id]:''}">${inner}</td>`;
+        }).join('')}
+        ${deleteTd}
+      </tr>`;
+
+    // Детальная строка
+    const colCount = COLS.filter(c => S.colVis[c.id]).length + (S.showRowNum ? 1 : 0);
+    const detailRow = isExp ? `
+      <tr class="row-detail-row" data-detail-for="${origIdx}">
+        <td colspan="${colCount}">
+          <div class="row-detail-inner">
+            <div class="row-detail-error">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M7 4v4M7 9.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              Подразделение: ${r.dept} · Статус: ${r.status}
+            </div>
+            <div class="row-detail-chips">
+              <div class="row-detail-chip">
+                <span class="row-detail-label">ФИО</span>
+                ${r.fio}
+              </div>
+              <div class="row-detail-chip">
+                <span class="row-detail-label">Категория</span>
+                ${r.category}
+              </div>
+              <div class="row-detail-chip">
+                <span class="row-detail-label">Дата</span>
+                ${r.date}
+              </div>
+              <div class="row-detail-chip">
+                <span class="chip-ok"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 6l2 2 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                ${r.dept} · запись актуальна
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>` : '';
+
+    return mainRow + detailRow;
+  }).join('');
+
+  // Delegate click on sel cells
+  body.querySelectorAll('.td-sel').forEach(td => {
+    td.onclick = e => {
+      e.stopPropagation();
+      const idx = +td.dataset.orig;
+      if (S.selectedRows.has(idx)) S.selectedRows.delete(idx);
+      else S.selectedRows.add(idx);
+      renderTableHead();
+      renderTableBody();
+    };
+  });
+
+  // 3-dot row menu
+  if (S.rowMenuMode) {
+    // Проставим active на открытую кнопку
+    body.querySelectorAll('.row-menu-btn').forEach(btn => {
+      if (S.openRowMenu === +btn.dataset.menuOrig) btn.classList.add('active');
+    });
+
+    body.querySelectorAll('.row-delete-btn').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const idx = +btn.dataset.deleteOrig;
+        const rowIdx = ROWS.findIndex((_, i) => i === idx);
+        if (rowIdx >= 0) {
+          ROWS.splice(rowIdx, 1);
+          S.selectedRows.delete(idx);
+          renderTableHead(); renderTableBody();
+        }
+      };
+    });
+
+    body.querySelectorAll('.row-menu-btn').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const idx = +btn.dataset.menuOrig;
+        if (S.openRowMenu === idx) {
+          S.openRowMenu = null;
+          removeRowCtxMenu();
+          renderTableBody();
+          return;
+        }
+        // Убираем active с предыдущей кнопки
+        body.querySelectorAll('.row-menu-btn.active').forEach(b => b.classList.remove('active', 'visible'));
+        // Берём rect ДО перерисовки DOM
+        const rect = btn.getBoundingClientRect();
+        S.openRowMenu = idx;
+        renderTableBody();
+        showRowCtxMenu(idx, rect.left, rect.bottom + 4);
+      };
+    });
+  }
+
+  // Expandable rows — клик по строке
+  if (S.expandableRows) {
+    body.querySelectorAll('tr.row-expandable').forEach(tr => {
+      tr.style.cursor = 'pointer';
+      tr.onclick = e => {
+        if (e.target.closest('.td-sel')) return;
+        const idx = +tr.dataset.orig;
+        if (S.expandedRows.has(idx)) S.expandedRows.delete(idx);
+        else S.expandedRows.add(idx);
+        renderTableBody();
+      };
+    });
+  }
+
+  // Bulk bar
+  const bulkBar = $('bulkBar');
+  const bulkCount = $('bulkCount');
+  if (bulkBar && bulkCount) {
+    const n = S.selectedRows.size;
+    bulkBar.style.display = n > 0 ? 'flex' : 'none';
+    bulkCount.textContent = `Выбрано ${n}`;
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER — SETTINGS PANEL (now inline in toolbar, no separate function needed)
+function renderSettingsPanel() { /* deprecated — dropdown rendered inline in renderToolbar */ }
+
+// ─────────────────────────────────────────────────────────
+// RENDER ALL
+// ─────────────────────────────────────────────────────────
+function renderAll() {
+  renderStateSwitcher();
+  renderToolbar();
+  renderSortPanel();
+  renderFilterBar();
+  renderTableHead();
+  renderTableBody();
+  renderSettingsPanel();
+  renderFilterAddDrop();
+  renderColFilterDrop();
+}
+
+// ─────────────────────────────────────────────────────────
+// GLOBAL CLICK — close dropdowns on outside click
+// ─────────────────────────────────────────────────────────
+document.addEventListener('click', e=>{
+  const dd1 = $('dropFilterAdd');
+  const dd2 = $('dropColFilter');
+
+  const inFilterAdd = dd1?.contains(e.target) || e.target.id==='btnFilterAdd' || e.target.closest('#btnFilterAdd');
+  const inColFilter = dd2?.contains(e.target) || e.target.closest('.th-filter-btn');
+  const inSortWrap  = e.target.closest('#sortWrap');
+  const inSettings  = e.target.closest('#settingsWrap');
+
+  if (!inFilterAdd && S.filterAddOpen) {
+    S.filterAddOpen = false;
+    renderToolbar();
+    renderSortPanel();
+    dd1?.classList.remove('open');
+  }
+  if (!inColFilter && S.colFilterOpen) {
+    S.colFilterOpen = null;
+    S.colFilterDraft = null;
+    dd2?.classList.remove('open');
+    renderToolbar();
+    renderSortPanel();
+  }
+  if (S.closedFilterOpen && !e.target.closest('.cf-pill-wrap')) {
+    S.closedFilterOpen = null;
+    renderToolbar();
+    renderSortPanel();
+  }
+  if (S.sortPanelOpen && !inSortWrap) {
+    S.sortPanelOpen = false;
+    renderToolbar();
+    renderSortPanel();
+  }
+  // Закрыть row ctx menu при клике снаружи
+  if (S.openRowMenu !== null && !e.target.closest('#rowCtxMenu') && !e.target.closest('.row-menu-btn')) {
+    S.openRowMenu = null;
+    removeRowCtxMenu();
+    renderTableBody();
+  }
+
+  if ((S.settingsOpen || S.colVisOpen) && !inSettings) {
+    S.settingsOpen = false;
+    S.colVisOpen = false;
+    renderToolbar();
+    renderSortPanel();
+  }
+});
+
+// reposition dropdowns on scroll/resize
+document.querySelector('.table-wrap')?.addEventListener('scroll', ()=>{
+  if (S.colFilterOpen) {
+    const btn = document.querySelector(`.th-filter-btn[data-filter-col="${S.colFilterOpen}"]`);
+    if (btn) positionDropdown($('dropColFilter'), btn);
+  }
+});
+
+window.addEventListener('resize', ()=>{
+  if (S.colFilterOpen) {
+    const btn = document.querySelector(`.th-filter-btn[data-filter-col="${S.colFilterOpen}"]`);
+    if (btn) positionDropdown($('dropColFilter'), btn);
+  }
+  if (S.filterAddOpen) {
+    const btn = $('btnFilterAdd');
+    if (btn) positionDropdown($('dropFilterAdd'), btn);
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+// ROW CONTEXT MENU
+// ─────────────────────────────────────────────────────────
+function removeRowCtxMenu() {
+  const old = document.getElementById('rowCtxMenu');
+  if (old) old.remove();
+}
+
+function showRowCtxMenu(origIdx, x, y) {
+  removeRowCtxMenu();
+  const r = ROWS[origIdx];
+  const menu = document.createElement('div');
+  menu.className = 'row-ctx-menu';
+  menu.id = 'rowCtxMenu';
+  menu.innerHTML = `
+    <div class="row-ctx-item" data-action="edit">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10.5V12h1.5l5.8-5.8-1.5-1.5L2 10.5zm9.7-5.7a1 1 0 000-1.4L10.6 2.3a1 1 0 00-1.4 0l-1 1 2.5 2.5 1-1z" fill="currentColor"/></svg>
+      Редактировать
+    </div>
+    <div class="row-ctx-item" data-action="copy">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 9.5V2.5A1.5 1.5 0 013.5 1h5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Дублировать
+    </div>
+    <div class="row-ctx-item" data-action="export">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v7M4 6l3 3 3-3M2 10v2h10v-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Экспортировать
+    </div>
+    <div class="row-ctx-item" data-action="history">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      История изменений
+    </div>
+
+  `;
+
+  // Позиция
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+  document.body.appendChild(menu);
+
+  // Корректировка если выходит за экран
+  const mRect = menu.getBoundingClientRect();
+  if (mRect.right > window.innerWidth - 8) {
+    menu.style.left = Math.max(8, window.innerWidth - mRect.width - 8) + 'px';
+  }
+  if (mRect.left < 8) {
+    menu.style.left = '8px';
+  }
+  if (mRect.bottom > window.innerHeight - 8) {
+    menu.style.top = (y - mRect.height - 36) + 'px';
+  }
+
+  menu.querySelectorAll('.row-ctx-item').forEach(item => {
+    item.onclick = e => {
+      e.stopPropagation();
+      const action = item.dataset.action;
+      if (action === 'delete') {
+        // Удаляем строку из данных (только в этой сессии)
+        ROWS.splice(origIdx, 1);
+      }
+      S.openRowMenu = null;
+      removeRowCtxMenu();
+      renderTableBody();
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────────
+renderAll();
+
+// Filter sidebar close handlers
+$('btnFilterSidebarClose').addEventListener('click', closeFilterSidebar);
+
+$('btnExpandStateBar').onclick = () => {
+  S.showStateBar = true;
+  $('stateBar').classList.remove('collapsed');
+  $('btnExpandStateBar').style.display = 'none';
+};
+</script>
+</body>
+</html>
